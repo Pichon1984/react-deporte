@@ -1,0 +1,35 @@
+.carousel-wrapper {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+.carousel-item img {
+  max-height: 600px;
+  object-fit: cover;
+}
+.card a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card a:hover {
+  transform: scale(1.02);
+  transition: transform 0.3s ease;
+}
+
+
+
+@media (max-width: 768px) {
+  .carousel-item img {
+    max-height: 300px;
+  }
+
+  .carousel-caption h3 {
+    font-size: 1.2rem;
+  }
+
+  .carousel-caption p {
+    font-size: 0.9rem;
+  }
+}
+
