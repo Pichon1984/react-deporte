@@ -29,7 +29,7 @@ export const NavigateApp = () => {
           </Nav>
 
           {/* Sección derecha */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center gap-3 ">
             <Button as={NavLink} to="/Registro" variant="outline-light">
               Registro
             </Button>

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
+
 import { Inicio } from './Pagesprincipal/Inicio';
 import { Contacto } from './Pagesprincipal/Contacto';
 import { Nosotros } from './Pagesprincipal/Nosotros';
@@ -15,6 +16,7 @@ import { Accesorios } from './Pagesprincipal/Accesorios';
 import { NavigateApp } from './components/NavigateApp';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Footer from './components/footer';
+import DetalleProducto from './components/DetalleProducto';
 
 
 
@@ -24,7 +26,7 @@ import Footer from './components/footer';
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-layout">
+      <div >
         <NavigateApp />
         <main className="main-content container mt-4">
           <Routes>
@@ -37,11 +39,10 @@ function App() {
             <Route path="/Registro" element={<Registro />} />
             <Route path="/Calzado" element={<Calzado />} />
             <Route path="/Indumentaria" element={<Indumentaria />} />
+            <Route path="/detalle/:id" element={<DetalleProducto/>}/>
             <Route path="/Accesorios" element={<Accesorios />} />
-           
           </Routes>
         </main>
-        
       </div>
        <Footer/>
     </BrowserRouter>

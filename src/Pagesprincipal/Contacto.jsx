@@ -1,11 +1,7 @@
-import React from 'react';
-import FormularioContacto from '../components/FormularioContacto';
+import React from 'react'
 
 export const Contacto = () => {
   return (
-    <div>
-      <FormularioContacto />
-    </div>
-  );
-};
-
+    <div>Contacto</div>
+  )
+}
