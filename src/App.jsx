@@ -15,7 +15,7 @@ import Indumentaria from './Pagesprincipal/Indumentaria';
 import { Accesorios } from './Pagesprincipal/Accesorios';
 import { NavigateApp } from './components/NavigateApp';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import Footer from './components/footer';
+import Footer from './components/Footer';
 import DetalleProducto from './components/DetalleProducto';
 
 
