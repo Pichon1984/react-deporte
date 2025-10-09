@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import emailjs from '@emailjs/browser';
 import '../styles/FormularioContacto.css';
-import logo from '../assets/img/logo.png';
-
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+import logoworkify from '../assets/img/logoworkify.png';
 
 export default function FormularioContacto() {
   const [formData, setFormData] = useState({
@@ -24,13 +20,8 @@ export default function FormularioContacto() {
   const handleSubmit = e => {
     e.preventDefault();
 
-  emailjs
-    .sendForm(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
-      form.current,
-      EMAILJS_PUBLIC_KEY
-    )
+    emailjs
+      .send('service_s8s8jye', 'template_4g8wmzs', formData, '5AOsvGiQmW8qjZ3UZ')
       .then(() => {
         setEnviado(true);
         setError(false);
@@ -46,12 +37,12 @@ export default function FormularioContacto() {
     <main>
       <div className="container my-5">
         <div className="row align-items-center justify-content-center g-4">
-          {/* Logo */}
+        
           <div className="col-12 col-md-5 text-center">
-           <img src={logo} alt="Logo de Pichón" style={{ width: '150px' }} />
+           <img src={logoworkify} alt="Logo de workify" style={{ width: '300px', height: 'auto' }} />
           </div>
 
-          {/* Formulario */}
+        
           <div className="col-12 col-md-6">
             <h2 className="text-center mb-4">Contáctanos</h2>
 
