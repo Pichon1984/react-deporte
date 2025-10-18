@@ -8,9 +8,9 @@ import logo from '../assets/img/logo.png';
 />
 
 
-export const NavigateApp = () => {
+export const NavigateApp = ({ logIn, logOut, auth }) => {
   return (
-    <Navbar expand="lg" bg="dark" variant="dark" /* fixed="top" */>
+    <Navbar expand="lg" bg="dark" variant="dark">
       <Container>
         <Navbar.Brand as={NavLink} to="/Inicio" className="d-flex align-items-center">
           <img src={logo} alt="Logo de Pichón" style={{ width: '150px', height: 'auto' }} />
@@ -28,12 +28,23 @@ export const NavigateApp = () => {
             <Nav.Link as={NavLink} to="/Contacto">Contacto</Nav.Link>
           </Nav>
 
-          {/* Sección derecha */}
           <div className="d-flex align-items-center gap-3 ">
-            <Button as={NavLink} to="/Registro" variant="outline-light">
-              Registro
-            </Button>
+            {
+              auth && (<Nav.Link as={NavLink} to="/Admin">Admin</Nav.Link>)
+            }
 
+            {auth ? (
+              <>
+
+                <Button variant="outline-light" onClick={logOut}>
+                  Cerrar sesión
+                </Button>
+              </>
+            ) : (
+              <Button as={NavLink} to="/Cuenta" variant="outline-light">
+                Inicio de sesión
+              </Button>
+            )}
             <NavLink to="/Carrito" className="text-white text-decoration-none position-relative">
               <i className="bi bi-cart-fill fs-6"></i>
               <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">

@@ -1,7 +1,9 @@
-import React from 'react'
+import React from 'react';
+import LoginComponent from '../components/LoginComponents';
 
-export const Cuenta = () => {
-  return (
-    <div>Cuenta</div>
-  )
-}
+const Cuenta = ({ logIn }) => {
+  return <LoginComponent logIn={logIn} />;
+};
+
+export default Cuenta;
+

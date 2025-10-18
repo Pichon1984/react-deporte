@@ -1,7 +1,12 @@
 import React from 'react'
+import FormularioContacto from '../components/FormularioContacto'
 
-export const Contacto = () => {
+const ContactoPage = () => {
   return (
-    <div>Contacto</div>
+    <>
+    <FormularioContacto/>
+    </>
   )
 }
+
+export default ContactoPage
