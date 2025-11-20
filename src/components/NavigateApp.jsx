@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Container, Nav, Navbar, NavDropdown, Button } from 'react-bootstrap';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
+import { CarritoContext } from '../context/CarritoContext';
 import logo from '../assets/img/logo.png';
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-/>
-
 
 export const NavigateApp = ({ logIn, logOut, auth }) => {
+  const { carrito } = useContext(CarritoContext);
+
+  const calcularTotal = () => {
+    return carrito.reduce((total, item) => {
+      const precioNumerico = parseFloat(item.precio.replace(/[^0-9.-]+/g, ''));
+      return total + precioNumerico;
+    }, 0);
+  };
+
   return (
     <Navbar expand="lg" bg="dark" variant="dark">
       <Container>
@@ -28,35 +33,69 @@ export const NavigateApp = ({ logIn, logOut, auth }) => {
             <Nav.Link as={NavLink} to="/Contacto">Contacto</Nav.Link>
           </Nav>
 
-          <div className="d-flex align-items-center gap-3 ">
-            {
-              auth && (<Nav.Link as={NavLink} to="/Admin">Admin</Nav.Link>)
-            }
+          <div className="d-flex align-items-center gap-3">
+            {auth && <Nav.Link as={NavLink} to="/Admin">Admin</Nav.Link>}
 
             {auth ? (
-              <>
-
-                <Button variant="outline-light" onClick={logOut}>
-                  Cerrar sesión
-                </Button>
-              </>
+              <Button variant="outline-light" onClick={logOut}>
+                Cerrar sesión
+              </Button>
             ) : (
               <Button as={NavLink} to="/Cuenta" variant="outline-light">
                 Inicio de sesión
               </Button>
             )}
-            <NavLink to="/Carrito" className="text-white text-decoration-none position-relative">
-              <i className="bi bi-cart-fill fs-6"></i>
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                0
-              </span>
-            </NavLink>
+
+            <NavDropdown
+              title={
+                <span className="position-relative">
+                  <i className="bi bi-cart fs-5 text-primary"></i>
+                  {carrito.length > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {carrito.length}
+                    </span>
+                  )}
+                </span>
+              }
+              id="carrito-dropdown"
+              align="end"
+            >
+              {carrito.length === 0 ? (
+                <NavDropdown.Item disabled>El carrito está vacío</NavDropdown.Item>
+              ) : (
+                <>
+                  {carrito.map((item, index) => (
+                    <NavDropdown.Item key={index} className="d-flex align-items-center gap-2" as={Link} to="/Carrito">
+                      <img
+                        src={item.imagen}
+                        alt={item.nombre}
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                        onError={(e) => { e.target.src = '/assets/img/default.png'; }}
+                      />
+
+
+                      <div className="d-flex flex-column">
+                        <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{item.nombre}</span>
+                        <small className="text-muted">Talle: {item.talle} – {item.precio}</small>
+                      </div>
+                    </NavDropdown.Item>
+                  ))}
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item disabled>
+                    Total: ${calcularTotal().toLocaleString('es-AR')}
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/Carrito">
+                    Ver carrito completo
+                  </NavDropdown.Item>
+                </>
+              )}
+            </NavDropdown>
           </div>
         </Navbar.Collapse>
       </Container>
     </Navbar>
   );
 };
-export default NavigateApp;
 
+export default NavigateApp;
 

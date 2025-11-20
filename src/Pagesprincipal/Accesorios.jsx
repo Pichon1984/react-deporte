@@ -1,7 +1,27 @@
-import React from 'react'
+import { useEffect, useState } from 'react';
+import InfoProducto from '../components/InfoProducto';
 
-export const Accesorios = () => {
+const Accesorios = () => {
+ const [productos, setProductos] = useState([]);
+
+  useEffect(() => {
+    const guardados = JSON.parse(localStorage.getItem('productos')) || [];
+
+    const filtrados = guardados.filter(
+      p => p?.categoria?.toLowerCase() === 'accesorios'
+    );
+
+    setProductos(filtrados);
+  }, []);
+
   return (
-    <div>Accesorios</div>
-  )
-}
+    <>
+      {productos.map((p, i) => (
+        <InfoProducto key={i} producto={p} />
+      ))}
+    </>
+  );
+};
+
+export default Accesorios;
+
