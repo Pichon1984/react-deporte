@@ -1,25 +1,49 @@
-import React, { useEffect } from 'react';
+import { useState } from 'react';
+import { Spinner, Form } from 'react-bootstrap';
 
 const CloudinaryUpload = ({ onUpload }) => {
-  useEffect(() => {
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: 'dqzffyx3w',
-        uploadPreset: 'workify',
-        sources: ['local', 'url', 'camera'],
-        multiple: false
-      },
-      (error, result) => {
-        if (!error && result.event === 'success') {
-          onUpload(result.info.secure_url);
-        }
+  const [cargando, setCargando] = useState(false);
+
+  const handleUpload = async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+
+    setCargando(true);
+
+    const formData = new FormData();
+    formData.append('file', archivo);
+    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_PRESET);
+
+    try {
+      const res = await fetch(import.meta.env.VITE_CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log('Respuesta Cloudinary:', data);
+
+      if (data.secure_url) {
+        onUpload(data.secure_url);
+      } else {
+        alert('Error al subir imagen a Cloudinary: ' + data.message);
+        console.error(data);
       }
-    );
+    } catch (error) {
+      alert('Error de red al subir imagen');
+      console.error(error);
+    } finally {
+      setCargando(false);
+    }
+  };
 
-    document.getElementById('upload_widget').addEventListener('click', () => widget.open(), false);
-  }, [onUpload]);
-
-  return <button id="upload_widget" className="btn btn-primary">Subir imagen</button>;
+  return (
+    <Form.Group>
+      <Form.Control type="file" onChange={handleUpload} disabled={cargando} />
+      {cargando && <Spinner animation="border" size="sm" className="mt-2" />}
+    </Form.Group>
+  );
 };
 
 export default CloudinaryUpload;
+

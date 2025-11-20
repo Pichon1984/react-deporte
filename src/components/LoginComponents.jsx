@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { useContext, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/img/logo.png';
 
-const LoginComponent = ({ logIn }) => {
+
+
+
+const LoginComponent = () => {
   const [correo, setCorreo] = useState('');
   const [contraseña, setContraseña] = useState('');
   const navigate = useNavigate();
+  const { logIn } = useContext(AuthContext);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-   
-    if (correo === 'admin@workify.com' && contraseña === '1234') {
-      logIn();
-      navigate('/Admin'); 
+    if (correo === 'admin@admin.com' && contraseña === '1234') {
+      const usuario = {
+        id: 'admin',
+        nombre: 'Administrador',
+        email: correo,
+        rol: 'admin',
+      };
+      logIn(usuario);
+      navigate('/admin');
     } else {
       alert('Correo o contraseña incorrectos');
     }

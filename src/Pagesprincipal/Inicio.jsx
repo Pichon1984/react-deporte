@@ -45,7 +45,7 @@ export function Inicio() {
         <Row className="g-4 justify-content-center">
   <Col md={4}>
     <Card className="h-100 text-center">
-      <Link to="/calzados" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/calzado" style={{ textDecoration: 'none', color: 'inherit' }}>
         <Card.Img
           variant="top"
           src={zapatilla}
