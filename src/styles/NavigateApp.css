@@ -1,0 +1,97 @@
+
+
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1.5rem;
+ 
+}
+
+
+.navbar-brand img {
+  max-height: 150px;
+}
+
+
+.nav-link {
+  color: white !important;
+  transition: color 0.3s ease;
+  font-size: 1.3rem;
+}
+
+.nav-link:hover {
+  color: black !important;
+}
+
+
+.dropdown-item {
+  background-color: transparent;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  color: black !important;
+  background-color: #f8f9fa;
+}
+
+
+
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.3em 0.6em;
+}
+
+
+.carrito-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.carrito-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+
+.carrito-total {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #212529;
+}
+
+.btn-outline-light {
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+}
+.btn-outline-light:hover {
+  background-color: white;
+  color:black;
+}
+
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+.search-bar input {
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  border: none;
+  width: 180px;
+}
+.search-bar button {
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  background-color:black;
+  border: none;
+  font-weight: bold;
+}
+.search-bar button:hover {
+  background-color: black;
+}
+

@@ -14,19 +14,33 @@ const LoginComponent = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+if (correo === 'admin@admin.com' && contraseña === '1234') {
+    const usuario = {
+      id: 'admin',
+      nombre: 'Administrador',
+      email: correo,
+      rol: 'admin',
+    };
+    logIn(usuario);
+    navigate('/admin');
+  } else if (correo === 'cliente@cliente.com' && contraseña === '1234') {
+    const usuario = {
+      id: 'cliente01',
+      nombre: 'Cliente ',
+      email: correo,
+      rol: 'cliente',
+      telefono: '3811234567',
+      direccion: '',
+    };
+    logIn(usuario);
+    localStorage.setItem('cliente', JSON.stringify(usuario));
+    navigate('/cliente');
+  } else {
+    alert('Correo o contraseña incorrectos');
+  }
 
-    if (correo === 'admin@admin.com' && contraseña === '1234') {
-      const usuario = {
-        id: 'admin',
-        nombre: 'Administrador',
-        email: correo,
-        rol: 'admin',
-      };
-      logIn(usuario);
-      navigate('/admin');
-    } else {
-      alert('Correo o contraseña incorrectos');
-    }
+
+
   };
 
   return (
@@ -62,7 +76,7 @@ const LoginComponent = () => {
               />
             </div>
             <div className="mb-3 text-end">
-              <Link to="/404" className="text-decoration-none">Olvidé mi contraseña</Link>
+              <Link to="/forgot-password" className="text-decoration-none">Olvidé mi contraseña</Link>
             </div>
             <div className="d-grid mb-3">
               <button type="submit" className="btn btn-danger">Iniciar sesión</button>
