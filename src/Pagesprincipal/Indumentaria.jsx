@@ -1,4 +1,4 @@
-import CategoriaPage from '../Pagesprincipal/categoriaPage';
+import CategoriaPage from './CategoriaPage';
 
 const Indumentaria = () => <CategoriaPage categoria="indumentaria" titulo="Indumentaria" />;
 
