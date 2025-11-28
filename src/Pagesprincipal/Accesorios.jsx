@@ -1,27 +1,9 @@
-import { useEffect, useState } from 'react';
-import InfoProducto from '../components/InfoProducto';
 
-const Accesorios = () => {
- const [productos, setProductos] = useState([]);
+import CategoriaPage from '../Pagesprincipal/categoriaPage';
 
-  useEffect(() => {
-    const guardados = JSON.parse(localStorage.getItem('productos')) || [];
-
-    const filtrados = guardados.filter(
-      p => p?.categoria?.toLowerCase() === 'accesorios'
-    );
-
-    setProductos(filtrados);
-  }, []);
-
-  return (
-    <>
-      {productos.map((p, i) => (
-        <InfoProducto key={i} producto={p} />
-      ))}
-    </>
-  );
-};
+const Accesorios = () => <CategoriaPage categoria="accesorios" titulo="Accesorios" />;
 
 export default Accesorios;
+
+
 
