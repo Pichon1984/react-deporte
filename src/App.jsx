@@ -47,7 +47,7 @@ function App() {
           <Routes>
             <Route path="/inicio" element={<Inicio />} />
             <Route path="/Cuenta" element={<Cuenta logIn={logIn} />} />
-            <Route path="/Categoria" element={<CategoriaPage />} />
+            <Route path="/categoria" element={<CategoriaPage />} />
             <Route path="/Nosotros" element={<Nosotros />} />
             <Route path="/Contacto" element={<Contacto />} />
             <Route path="/Ingresa o Registrate" element={<Cuenta />} />
