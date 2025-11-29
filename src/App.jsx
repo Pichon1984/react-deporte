@@ -27,7 +27,7 @@ import ClientePage from './PagesPrincipal/ClientePage';
 import RegisterComponent from './components/RegisterComponent';
 import ResetPasswordPage from './PagesPrincipal/ResetPasswordPage';
 import ForgotPasswordPage from './PagesPrincipal/ForgotPasswordPage';
-import CategoriaPage from './PagesPrincipal/CategoriaPage';
+
 
 
 
@@ -47,7 +47,6 @@ function App() {
           <Routes>
             <Route path="/inicio" element={<Inicio />} />
             <Route path="/Cuenta" element={<Cuenta logIn={logIn} />} />
-            <Route path="/categoria" element={<CategoriaPage />} />
             <Route path="/Nosotros" element={<Nosotros />} />
             <Route path="/Contacto" element={<Contacto />} />
             <Route path="/Ingresa o Registrate" element={<Cuenta />} />
