@@ -7,27 +7,27 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
 
-import  Inicio  from './Pagesprincipal/Inicio';
-import Contacto from './Pagesprincipal/Contacto';
-import { Nosotros } from './Pagesprincipal/Nosotros';
-import Cuenta from './Pagesprincipal/Cuenta';
-import Carrito from './Pagesprincipal/Carrito';
+import  Inicio  from './PagesPrincipal/Inicio';
+import Contacto from './PagesPrincipal/Contacto';
+import { Nosotros } from './PagesPrincipal/Nosotros';
+import Cuenta from './PagesPrincipal/Cuenta';
+import Carrito from './PagesPrincipal/Carrito';
 
-import Registro from './Pagesprincipal/Registro';
-import Calzado from './Pagesprincipal/Calzado';
-import Indumentaria from './Pagesprincipal/Indumentaria';
-import Accesorios from './Pagesprincipal/Accesorios';
+import Registro from './PagesPrincipal/Registro';
+import Calzado from './PagesPrincipal/Calzado';
+import Indumentaria from './PagesPrincipal/Indumentaria';
+import Accesorios from './PagesPrincipal/Accesorios';
 import NavigateApp  from './components/NavigateApp';
 import Footer from './components/Footer';
 import DetalleProducto from './components/DetalleProducto';
-import Admin from './Pagesprincipal/Admin';
+import Admin from './PagesPrincipal/Admin';
 import ProtectedRoutesAdmin from './routes/ProtectedRoutesAdmin';
-import Error404Page from './Pagesprincipal/Error404Page';
-import CategoriaPage from './Pagesprincipal/CategoriaPage';
-import ClientePage from './Pagesprincipal/ClientePage';
+import Error404Page from './PagesPrincipal/Error404Page';
+import ClientePage from './PagesPrincipal/ClientePage';
 import RegisterComponent from './components/RegisterComponent';
-import ResetPasswordPage from './Pagesprincipal/ResetPasswordPage';
-import ForgotPasswordPage from './Pagesprincipal/ForgotPasswordPage';
+import ResetPasswordPage from './PagesPrincipal/ResetPasswordPage';
+import ForgotPasswordPage from './PagesPrincipal/ForgotPasswordPage';
+
 
 
 
@@ -47,7 +47,6 @@ function App() {
           <Routes>
             <Route path="/inicio" element={<Inicio />} />
             <Route path="/Cuenta" element={<Cuenta logIn={logIn} />} />
-            <Route path="/categoria" element={<CategoriaPage />} />
             <Route path="/Nosotros" element={<Nosotros />} />
             <Route path="/Contacto" element={<Contacto />} />
             <Route path="/Ingresa o Registrate" element={<Cuenta />} />

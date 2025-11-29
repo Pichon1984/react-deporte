@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import InfoProducto from '../components/InfoProducto';
+import InfoProducto from './InfoProducto';
 
 const CategoriaPage = ({ categoria, titulo }) => {
   const [productos, setProductos] = useState([]);
