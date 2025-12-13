@@ -25,9 +25,9 @@ const FiltroProductos = ({ filtros, setFiltros }) => {
             required
           >
             <option value="">Seleccionar categoría</option>
-           <option value="Indumentaria">Indumentaria</option>
-              <option value="Calzado">Calzado</option>
-              <option value="Accesorios">Accesorios</option>
+           <option value="indumentaria">Indumentaria</option>
+              <option value="calzado">Calzado</option>
+              <option value="accesorios">Accesorios</option>
           </Form.Select>
         </Col>
         <Col md={4}>

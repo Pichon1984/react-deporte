@@ -1,25 +1,31 @@
-import React from 'react';
-
+import React from "react";
+import { Image } from "react-bootstrap";
 
 const MiniaturasCarrusel = ({ imagenes, selectedIndex, onSelect }) => {
+  const miniaturas = imagenes.slice(0, 4); // máximo 4 miniaturas
+
   return (
-    <div className="miniaturas-wrapper">
-
-
-      {imagenes.map((img, index) => (
-        <img
+    <div className="d-flex flex-wrap justify-content-center gap-2">
+      {miniaturas.map((img, index) => (
+        <Image
           key={index}
           src={img}
           alt={`Miniatura ${index + 1}`}
-          className={`miniatura-img ${selectedIndex === index ? 'selected' : ''}`}
+          thumbnail
+          style={{
+            width: "70px",
+            height: "70px",
+            objectFit: "contain",
+            cursor: "pointer",
+            border: selectedIndex === index ? "2px solid #007bff" : "1px solid #ccc"
+          }}
           onClick={() => onSelect(index)}
         />
       ))}
     </div>
-
-
   );
 };
 
 export default MiniaturasCarrusel;
+
 

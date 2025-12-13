@@ -1,53 +1,63 @@
-import { useContext, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import logo from '../assets/img/logo.png';
-
-
-
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // 👈 usar el hook
+import logo from "../assets/img/logo.png";
 
 const LoginComponent = () => {
-  const [correo, setCorreo] = useState('');
-  const [contraseña, setContraseña] = useState('');
+  const [correo, setCorreo] = useState("");
+  const [contraseña, setContraseña] = useState("");
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { logIn } = useContext(AuthContext);
+  const { logIn } = useAuth(); // 👈 ahora sí
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-if (correo === 'admin@admin.com' && contraseña === '1234') {
-    const usuario = {
-      id: 'admin',
-      nombre: 'Administrador',
-      email: correo,
-      rol: 'admin',
-    };
-    logIn(usuario);
-    navigate('/admin');
-  } else if (correo === 'cliente@cliente.com' && contraseña === '1234') {
-    const usuario = {
-      id: 'cliente01',
-      nombre: 'Cliente ',
-      email: correo,
-      rol: 'cliente',
-      telefono: '3811234567',
-      direccion: '',
-    };
-    logIn(usuario);
-    localStorage.setItem('cliente', JSON.stringify(usuario));
-    navigate('/cliente');
-  } else {
-    alert('Correo o contraseña incorrectos');
-  }
 
+    try {
+      const resp = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo, password: contraseña }),
+      });
 
+      const data = await resp.json();
 
+      if (!resp.ok) {
+        return setError(data.msg || "Error en login");
+      }
+
+      const usuario = {
+        id: data.usuario._id,
+        nombre: data.usuario.nombre,
+        correo: data.usuario.correo,
+        rol: (data.usuario.rol || "").toUpperCase(),
+        telefono: data.usuario.telefono,
+        direccion: data.usuario.direccion,
+      };
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+
+      logIn(usuario, data.token); // 👈 guarda usuario en contexto
+
+      if (usuario.rol === "ADMIN") {
+        navigate("/admin");
+      } else if (usuario.rol === "CLIENTE") {
+        navigate("/cliente");
+      } else {
+        navigate("/inicio");
+      }
+    } catch (error) {
+      console.error(error);
+      setError("Error en el servidor");
+    }
   };
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
       <div className="row justify-content-center align-items-center">
         <div className="col-md-6 d-none d-md-flex justify-content-center align-items-center">
-          <img src={logo} alt="Logo" style={{ width: '300px', height: 'auto' }} />
+          <img src={logo} alt="Logo" style={{ width: "300px", height: "auto" }} />
         </div>
 
         <div className="col-md-6 col-lg-4 px-4">
@@ -75,8 +85,13 @@ if (correo === 'admin@admin.com' && contraseña === '1234') {
                 required
               />
             </div>
+
+            {error && <div className="alert alert-danger">{error}</div>}
+
             <div className="mb-3 text-end">
-              <Link to="/forgot-password" className="text-decoration-none">Olvidé mi contraseña</Link>
+              <Link to="/forgot-password" className="text-decoration-none">
+                Olvidé mi contraseña
+              </Link>
             </div>
             <div className="d-grid mb-3">
               <button type="submit" className="btn btn-danger">Iniciar sesión</button>
@@ -84,30 +99,9 @@ if (correo === 'admin@admin.com' && contraseña === '1234') {
           </form>
 
           <div className="mb-3">
-            <a
-              href="https://accounts.google.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-outline-dark w-100 d-flex align-items-center justify-content-start gap-2"
-            >
-              <i className="bi bi-google" style={{ fontSize: '1.2rem' }}></i>
-              <span>Continuar con Google</span>
-            </a>
-          </div>
-          <div className="mb-4">
-            <a
-              href="https://www.facebook.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-start gap-2"
-            >
-              <i className="bi bi-facebook" style={{ fontSize: '1.2rem' }}></i>
-              <span>Continuar con Facebook</span>
-            </a>
-          </div>
-
-          <div className="text-center">
-            <Link to="/registro" className="text-decoration-none">Registrarme</Link>
+            <Link to="/Registro" className="text-decoration-none">
+              Registrarme
+            </Link>
           </div>
         </div>
       </div>
@@ -116,4 +110,8 @@ if (correo === 'admin@admin.com' && contraseña === '1234') {
 };
 
 export default LoginComponent;
+
+
+
+
 

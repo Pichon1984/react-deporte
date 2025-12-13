@@ -7,7 +7,7 @@ import MiniaturasCarrusel from '../components/carrusel/MiniaturasCarrusel';
 import ImagenPrincipal from '../components/carrusel/ImagenPrincipal';
 
 function DetalleProducto() {
-  const { id } = useParams();
+  const { id } = useParams(); // _id de MongoDB
   const [producto, setProducto] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [talleSeleccionado, setTalleSeleccionado] = useState('');
@@ -16,12 +16,16 @@ function DetalleProducto() {
   const { agregarProducto } = useContext(CarritoContext);
 
   useEffect(() => {
-    const guardados = localStorage.getItem('productos');
-    if (guardados) {
-      const lista = JSON.parse(guardados);
-      const encontrado = lista.find(p => p.id === id || p.id === parseInt(id));
-      setProducto(encontrado);
-    }
+    const fetchProducto = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/api/productos/${id}`);
+        const data = await res.json();
+        setProducto(data); // backend devuelve el objeto directo
+      } catch (error) {
+        console.error('Error cargando producto:', error);
+      }
+    };
+    if (id) fetchProducto();
   }, [id]);
 
   if (!producto) return <h2 className="text-center py-5">Producto no encontrado</h2>;
@@ -35,31 +39,31 @@ function DetalleProducto() {
       alert(`Solo hay ${producto.stock} unidades disponibles`);
       return;
     }
-
     agregarProducto(producto, talleSeleccionado || 'único', cantidad);
     setMostrarToast(true);
     setTimeout(() => setMostrarToast(false), 3000);
   };
 
+  const imagenes = (producto.imagenes && producto.imagenes.length > 0)
+    ? producto.imagenes
+    : [producto.img || '/placeholder.jpg'];
+
   return (
     <Container className="py-5">
       <Row className="align-items-start">
-        <Col xs={12} md={2}>
-          <MiniaturasCarrusel
-            imagenes={producto.imagenes}
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-          />
+        {/* Imagen principal */}
+        <Col xs={12} md={7} className="mb-3">
+          <ImagenPrincipal imagen={imagenes[selectedIndex] || '/placeholder.jpg'} />
         </Col>
-        <Col xs={12} md={5}>
-          <ImagenPrincipal imagen={producto.imagenes[selectedIndex]} />
-        </Col>
+
+        {/* Info del producto */}
         <Col xs={12} md={5}>
           <h2>{producto.nombre}</h2>
-          <p className="text-muted">Código: {producto.id}</p>
-          <p className="text-muted">Categoría: {producto.categoria}</p>
+          <p className="text-muted">Código: {producto._id}</p>
+          <p className="text-muted">Categoría: {producto.categoria?.nombre || producto.categoria}</p>
           <p>{producto.descripcion}</p>
           <h4 className="text-success">${producto.precio}</h4>
+
           <Row className="mb-3">
             {producto.talles?.length > 0 && (
               <Col xs={6}>
@@ -101,6 +105,15 @@ function DetalleProducto() {
           >
             Agregar al carrito
           </Button>
+        </Col>
+
+        {/* Miniaturas responsive */}
+        <Col xs={12} className="mt-4">
+          <MiniaturasCarrusel
+            imagenes={imagenes}
+            selectedIndex={selectedIndex}
+            onSelect={setSelectedIndex}
+          />
         </Col>
       </Row>
 

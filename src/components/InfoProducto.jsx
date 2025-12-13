@@ -1,8 +1,10 @@
+
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Badge } from 'react-bootstrap';
 
-const Producto = ({ titulo, productos }) => {
+const Producto = ({ titulo, productos = [] }) => {
   const navigate = useNavigate();
   const [paginaActual, setPaginaActual] = useState(1);
   const [filtros, setFiltros] = useState({
@@ -21,7 +23,7 @@ const Producto = ({ titulo, productos }) => {
   };
 
   const aplicarFiltros = () => {
-    let lista = [...productos];
+    let lista = Array.isArray(productos) ? [...productos] : [];
 
     if (filtros.precioMin) {
       lista = lista.filter(p => Number(p.precio) >= Number(filtros.precioMin));
@@ -103,12 +105,12 @@ const Producto = ({ titulo, productos }) => {
         {productosPagina.length === 0 ? (
           <p className="text-center">No hay productos que coincidan con los filtros.</p>
         ) : (
-          productosPagina.map((producto, index) => (
-            <Col lg={4} md={6} sm={6} xs={12} key={index}>
+          productosPagina.map((producto) => (
+            <Col lg={4} md={6} sm={6} xs={12} key={producto._id}>
               <Card
                 className="h-100 text-center shadow-sm border-0"
                 style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/detalle/${producto.id}`)}
+                onClick={() => navigate(`/detalle/${producto._id}`)}
               >
                 <div className="position-relative">
                   <Card.Img

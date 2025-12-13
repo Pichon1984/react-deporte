@@ -1,73 +1,71 @@
-import { useState, useEffect } from 'react';
-import FiltroProductos from './FiltroProductos';
-import ListaProductos from './ListaProductos';
-import ProductoForm from './ProductoForm';
+import { useState, useEffect } from "react";
+import ProductoForm from "./ProductoForm";
 
 const AdminProductos = () => {
   const [productos, setProductos] = useState([]);
-  const [filtros, setFiltros] = useState({ nombre: '', categoria: '', talle: '' });
-  const [modoEdicion, setModoEdicion] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
 
+  // ✅ cargar productos
+  const fetchProductos = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:3000/api/productos", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      setProductos(data);
+    } catch (error) {
+      console.error("Error cargando productos:", error);
+    }
+  };
+
   useEffect(() => {
-    const guardados = JSON.parse(localStorage.getItem('productos')) || [];
-    setProductos(guardados);
+    fetchProductos();
   }, []);
 
-  const guardarProducto = (nuevo) => {
-    const productoFinal = {
-      ...nuevo,
-      id: crypto.randomUUID(),
-      imagen: nuevo.imagenes?.[0] || '/placeholder.jpg',
-    };
+  // ✅ guardar producto con token
+  const handleGuardar = async (producto) => {
+    const token = localStorage.getItem("token");
+    try {
+      const url = producto._id
+        ? `http://localhost:3000/api/productos/${producto._id}`
+        : "http://localhost:3000/api/productos";
 
-    const actualizados = modoEdicion
-      ? productos.map(p => (p.id === productoEditando.id ? productoFinal : p))
-      : [...productos, productoFinal];
+      const method = producto._id ? "PUT" : "POST";
 
-    setProductos(actualizados);
-    localStorage.setItem('productos', JSON.stringify(actualizados));
-    setModoEdicion(false);
-    setProductoEditando(null);
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(producto),
+      });
 
-    console.log('Producto guardado:', productoFinal);
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      await fetchProductos(); // refrescar lista
+      setProductoEditando(null);
+    } catch (error) {
+      console.error("Error guardando producto:", error);
+    }
   };
-
-  const eliminarProducto = (id) => {
-    const actualizados = productos.filter(p => p.id !== id);
-    setProductos(actualizados);
-    localStorage.setItem('productos', JSON.stringify(actualizados));
-  };
-
-  const editarProducto = (producto) => {
-    setModoEdicion(true);
-    setProductoEditando(producto);
-  };
-
-  const productosFiltrados = productos.filter(p => {
-    const coincideNombre = filtros.nombre === '' || p.nombre.toLowerCase().includes(filtros.nombre.toLowerCase());
-    const coincideCategoria = filtros.categoria === '' || p.categoria === filtros.categoria;
-    const coincideTalle = filtros.talle === '' || (p.talles || []).includes(filtros.talle);
-    return coincideNombre && coincideCategoria && coincideTalle;
-  });
 
   return (
-    <>
-      <FiltroProductos filtros={filtros} setFiltros={setFiltros} />
-      <ProductoForm
-        productoInicial={modoEdicion ? productoEditando : {}}
-        onGuardar={guardarProducto}
-        onCancelar={() => {
-          setModoEdicion(false);
-          setProductoEditando(null);
-        }}
-      />
-      <ListaProductos
-        productos={productosFiltrados}
-        onEditar={editarProducto}
-        onEliminar={eliminarProducto}
-      />
-    </>
+    <div>
+      <button onClick={() => setProductoEditando({})}>Nuevo Producto</button>
+
+      {productoEditando && (
+        <ProductoForm
+          productoInicial={productoEditando}
+          onGuardar={handleGuardar}
+          onCancelar={() => setProductoEditando(null)}
+        />
+      )}
+
+      {/* renderizar productos */}
+    </div>
   );
 };
 

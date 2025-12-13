@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Form, Button, Row, Col, Image, Spinner } from 'react-bootstrap';
 
 const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
@@ -41,12 +41,18 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
 
     const nuevoProducto = {
       ...producto,
+      categoria: producto.categoria.toLowerCase(), // 👈 importante para backend
       talles,
       fechaCreacion: producto.fechaCreacion || new Date().toISOString()
     };
 
+    // 👇 Consola para verificar qué categoría se está enviando
+    console.log("Categoría seleccionada:", producto.categoria);
+    console.log("Producto a guardar:", nuevoProducto);
+
     onGuardar(nuevoProducto);
 
+    // reset form
     setProducto({
       nombre: '',
       precio: '',
@@ -124,7 +130,7 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
     <Form>
       <Row>
         <Col md={6}>
-          <Form.Group className="mb-6">
+          <Form.Group className="mb-3">
             <Form.Label>Nombre</Form.Label>
             <Form.Control
               name="nombre"
@@ -152,9 +158,9 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
               required
             >
               <option value="">Seleccionar categoría</option>
-              <option value="Indumentaria">Indumentaria</option>
-              <option value="Calzado">Calzado</option>
-              <option value="Accesorios">Accesorios</option>
+              <option value="indumentaria">Indumentaria</option>
+              <option value="calzado">Calzado</option>
+              <option value="accesorios">Accesorios</option>
             </Form.Select>
           </Form.Group>
 
