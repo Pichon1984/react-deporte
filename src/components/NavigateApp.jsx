@@ -1,42 +1,63 @@
 import React, { useContext } from 'react';
-import { Container, Nav, Navbar, NavDropdown, Button } from 'react-bootstrap';
-import { NavLink, useNavigate, Link } from "react-router-dom";
+import { Container, Nav, Navbar, NavDropdown, Button, OverlayTrigger, Popover } from 'react-bootstrap';
+import { NavLink, useNavigate } from "react-router-dom";
 import { CarritoContext } from '../context/CarritoContext';
 import { AuthContext } from '../context/AuthContext';
+import { BsCart } from "react-icons/bs"; // 👈 icono carrito
 import '../styles/NavigateApp.css';
 import logo from '../assets/img/logo.png';
 import SearchInput from './SearchInput';
 
-
-
-export const NavigateApp = ({ logOut }) => {
+export const NavigateApp = () => {
   const { carrito } = useContext(CarritoContext);
-  const { usuario } = useContext(AuthContext);
+  const { usuario, logOut } = useContext(AuthContext);
   const navigate = useNavigate();
-
 
   const auth = !!usuario;
 
+  // ✅ Calcular total usando productoId.precio
   const calcularTotal = () => {
     if (!Array.isArray(carrito)) return 0;
-
     return carrito.reduce((total, item) => {
-      const precioNumerico = typeof item.precio === 'string'
-        ? parseFloat(item.precio.replace(/[^0-9.-]+/g, '')) || 0
-        : Number(item.precio) || 0;
-
+      const precioNumerico = Number(item.productoId?.precio || 0);
       return total + precioNumerico * item.cantidad;
     }, 0);
   };
 
-
-  const handleLogout = async () => {
-    await logOut();
-    navigate("/home", { replace: true });
+  const handleLogout = () => {
+    logOut();
+    navigate("/inicio", { replace: true });
   };
 
-
-
+  // 👇 Popover resumen carrito
+  const popover = (
+    <Popover id="popover-carrito" className="shadow">
+      <Popover.Header as="h3">Carrito</Popover.Header>
+      <Popover.Body>
+        {carrito.length === 0 ? (
+          <p>Tu carrito está vacío</p>
+        ) : (
+          <>
+            <ul className="list-unstyled mb-2">
+              {carrito.slice(0, 3).map((item) => (
+                <li key={item.productoId?._id}>
+                  {item.productoId?.nombre} x{item.cantidad} – $
+                  {(Number(item.productoId?.precio || 0) * item.cantidad).toLocaleString("es-AR")}
+                </li>
+              ))}
+              {carrito.length > 3 && <li>… y más productos</li>}
+            </ul>
+            <strong>Total: ${calcularTotal().toLocaleString("es-AR")}</strong>
+            <div className="mt-2">
+              <Button as={NavLink} to="/carrito" size="sm" variant="primary">
+                Ver carrito
+              </Button>
+            </div>
+          </>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
 
   return (
     <Navbar expand="lg" bg="primary" variant="dark">
@@ -49,9 +70,9 @@ export const NavigateApp = ({ logOut }) => {
         <Navbar.Collapse id="navbar-nav">
           <Nav className="me-auto">
             <NavDropdown title="Categorías" id="nav-dropdown">
-              <NavDropdown.Item as={NavLink} to="/Calzado">Calzado</NavDropdown.Item>
-              <NavDropdown.Item as={NavLink} to="/Indumentaria">Indumentaria</NavDropdown.Item>
-              <NavDropdown.Item as={NavLink} to="/Accesorios">Accesorios</NavDropdown.Item>
+              <NavDropdown.Item as={NavLink} to="/categoria/calzado">Calzado</NavDropdown.Item>
+              <NavDropdown.Item as={NavLink} to="/categoria/indumentaria">Indumentaria</NavDropdown.Item>
+              <NavDropdown.Item as={NavLink} to="/categoria/accesorios">Accesorios</NavDropdown.Item>
             </NavDropdown>
 
             <Nav.Link as={NavLink} to="/Nosotros">Nosotros</Nav.Link>
@@ -59,84 +80,37 @@ export const NavigateApp = ({ logOut }) => {
             <SearchInput />
           </Nav>
 
-          <div className="d-flex align-items-center gap-2">
-            {usuario?.rol === 'admin' && (
-              <Nav.Link as={NavLink} to="/admin">Admin</Nav.Link>
-            )}
-            {usuario?.rol === 'cliente' && (
-              <Nav.Link as={NavLink} to="/cliente">
-                Hola, {usuario.nombre}
+          <div className="d-flex align-items-center gap-3">
+            {/* Carrito con popover */}
+            <OverlayTrigger trigger={["hover", "focus"]} placement="bottom" overlay={popover}>
+              <Nav.Link as={NavLink} to="/carrito" className="position-relative">
+                <BsCart size={22} />
+                {carrito.length > 0 && (
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style={{ fontSize: "0.7rem" }}
+                  >
+                    {carrito.length}
+                  </span>
+                )}
+              </Nav.Link>
+            </OverlayTrigger>
+
+            {usuario && (
+              <Nav.Link as={NavLink} to={`/${usuario.rol}`}>
+                {usuario.rol === 'ADMIN' ? 'Admin' : `Hola, ${usuario.nombre}`}
               </Nav.Link>
             )}
-
-
 
             {auth ? (
               <Button variant="outline-light" onClick={handleLogout}>
                 Cerrar sesión
               </Button>
             ) : (
-              <Button as={NavLink} to="/Ingresa o Registrate" variant="outline-light">
+              <Button as={NavLink} to="/Cuenta" variant="outline-light">
                 Inicio de sesión
               </Button>
             )}
-
-
-
-            <NavDropdown
-              title={
-                <span className="position-relative">
-                  <i className="bi bi-cart-fill fs-3 text-white" aria-label="Carrito"></i>
-                  {carrito.length > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                      {carrito.length}
-                    </span>
-                  )}
-                </span>
-              }
-              id="carrito-dropdown"
-              align="end"
-            >
-              {carrito.length === 0 ? (
-                <NavDropdown.Item disabled>El carrito está vacío</NavDropdown.Item>
-              ) : (
-                <>
-                  {carrito.map((item, index) => (
-                    <NavDropdown.Item
-                      key={index}
-                      className="d-flex align-items-center gap-2"
-                      as={Link}
-                      to="/Carrito"
-                    >
-                      <img
-                        src={item.imagen}
-                        alt={item.nombre}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          objectFit: 'cover',
-                          borderRadius: '4px',
-                        }}
-                        onError={(e) => {
-                          e.target.src = '/assets/img/default.png';
-                        }}
-                      />
-                      <div className="d-flex flex-column">
-                        <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{item.nombre}</span>
-                        <small className="text-muted">Talle: {item.talle} – {item.precio}</small>
-                      </div>
-                    </NavDropdown.Item>
-                  ))}
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item disabled>
-                    <h4>Total: ${calcularTotal()?.toLocaleString('es-AR') || '0'}</h4>
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/Carrito">
-                    Ver carrito completo
-                  </NavDropdown.Item>
-                </>
-              )}
-            </NavDropdown>
           </div>
         </Navbar.Collapse>
       </Container>
@@ -145,4 +119,9 @@ export const NavigateApp = ({ logOut }) => {
 };
 
 export default NavigateApp;
+
+
+
+
+
 

@@ -1,13 +1,14 @@
-import React from 'react';
+import React from "react";
+import { Image } from "react-bootstrap";
 
 const ImagenPrincipal = ({ imagen }) => {
   return (
-    <div className="rounded shadow-sm p-3 text-center">
-      <img
+    <div className="text-center">
+      <Image
         src={imagen}
-        alt="Vista seleccionada"
-        className="img-fluid"
-        style={{ maxHeight: '400px', objectFit: 'contain' }}
+        alt="Imagen principal"
+        fluid
+        style={{ maxHeight: "400px", objectFit: "contain" }}
       />
     </div>
   );

@@ -1,36 +1,36 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import { Form, FormControl, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
+function SearchInput() {
+  const [searchValue, setSearchValue] = useState(''); // 👈 inicializamos con string vacío
+  const navigate = useNavigate();
 
-const SearchInput = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate(); 
-
-  const handleSearch = (e) => {
-    e.preventDefault(); 
-    if (searchTerm.trim()) { 
-      navigate(`/search?q=${searchTerm.trim()}`); 
-      setSearchTerm(''); 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (searchValue.trim() !== '') {
+      // 👇 normalizamos a minúsculas para que coincida con la base
+      navigate(`/categoria/${searchValue.toLowerCase()}`);
     }
   };
 
   return (
-    <Form onSubmit={handleSearch} className="d-flex">
-      <FormControl 
-        type="search"
-        placeholder="Buscar..."
-        className="me-2" 
-        aria-label="Search"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+    <form onSubmit={handleSubmit} className="d-flex">
+      <input
+        type="text"
+        placeholder="Buscar categoría..."
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        className="form-control me-2"
       />
-      <Button type="submit" variant="outline-light"> {}
+      <button type="submit" className="btn btn-outline-light">
         Buscar
-      </Button>
-    </Form>
+      </button>
+    </form>
   );
-};
+}
 
 export default SearchInput;
+
+
+
+

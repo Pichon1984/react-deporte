@@ -1,82 +1,107 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { AuthContext } from './AuthContext';
+import React, { createContext, useState, useEffect } from "react";
 
 export const CarritoContext = createContext();
 
-export function CarritoProvider({ children }) {
-  const { usuario } = useContext(AuthContext);
-  const [carrito, setCarrito] = useState([]);
+export const CarritoProvider = ({ children }) => {
+  const [carrito, setCarrito] = useState(() => {
+    try {
+      const saved = localStorage.getItem("carrito");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
-    if (usuario) {
-      const almacenado = localStorage.getItem(`carrito-${usuario.id}`);
-      setCarrito(almacenado ? JSON.parse(almacenado) : []);
-    }
-  }, [usuario]);
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+  }, [carrito]);
 
-  useEffect(() => {
-    if (usuario) {
-      localStorage.setItem(`carrito-${usuario.id}`, JSON.stringify(carrito));
-    }
-  }, [carrito, usuario]);
-
+  // ➕ Agregar producto desde catálogo
   const agregarProducto = (producto, talle, cantidad = 1) => {
-    const imagen =
-      typeof producto.imagenes?.[0] === 'string'
-        ? producto.imagenes[0]
-        : producto.imagenes?.[0]?.url ||
-          producto.imagen ||
-          producto.url ||
-          '/assets/img/default.png';
+    if (!producto?._id) return;
 
-    const idUnico = `${producto.id}-${talle}`;
-    const existe = carrito.find(item => item.id === idUnico);
-
-    if (existe) {
-      const actualizado = carrito.map(item =>
-        item.id === idUnico
-          ? { ...item, cantidad: item.cantidad + cantidad }
-          : item
+    setCarrito(prev => {
+      const idx = prev.findIndex(
+        i => i.productoId?._id === producto._id && i.talle === talle
       );
-      setCarrito(actualizado);
-    } else {
-      const nuevoProducto = {
-        ...producto,
-        talle,
-        imagen,
-        id: idUnico,
-        cantidad,
-      };
-      setCarrito(prev => [...prev, nuevoProducto]);
-    }
+
+      if (idx >= 0) {
+        const nuevo = [...prev];
+        nuevo[idx].cantidad += cantidad;
+        return nuevo;
+      } else {
+        return [...prev, { productoId: producto, talle, cantidad }];
+      }
+    });
   };
 
-  
-  const eliminarProducto = (id) => {
-    const actualizado = carrito
-      .map(item =>
-        item.id === id
-          ? { ...item, cantidad: item.cantidad - 1 }
+  // ➕ Sumar unidad desde carrito (solo ID)
+  const sumarUnidad = (productoId, talle) => {
+    setCarrito(prev =>
+      prev.map(item =>
+        item.productoId?._id === productoId && item.talle === talle
+          ? { ...item, cantidad: item.cantidad + 1 }
           : item
       )
-      .filter(item => item.cantidad > 0);
-
-    setCarrito(actualizado);
+    );
   };
 
-  const vaciarCarrito = () => {
-    setCarrito([]);
-    if (usuario) {
-      localStorage.removeItem(`carrito-${usuario.id}`);
-    }
+  // ➖ Eliminar una unidad
+  const eliminarProducto = (productoId, talle) => {
+    setCarrito(prev =>
+      prev
+        .map(item =>
+          item.productoId?._id === productoId && item.talle === talle
+            ? { ...item, cantidad: item.cantidad - 1 }
+            : item
+        )
+        .filter(item => item.cantidad > 0)
+    );
   };
+
+  // 🗑️ Eliminar producto completo
+  const eliminarProductoTotal = (productoId, talle) => {
+    setCarrito(prev =>
+      prev.filter(
+        item => !(item.productoId?._id === productoId && item.talle === talle)
+      )
+    );
+  };
+
+  // 🧹 Vaciar carrito
+  const vaciarCarrito = () => setCarrito([]);
 
   return (
     <CarritoContext.Provider
-      value={{ carrito, agregarProducto, eliminarProducto, vaciarCarrito }}
+      value={{
+        carrito,
+        agregarProducto,
+        sumarUnidad,
+        eliminarProducto,
+        eliminarProductoTotal,
+        vaciarCarrito
+      }}
     >
       {children}
     </CarritoContext.Provider>
   );
-}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

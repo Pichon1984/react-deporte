@@ -7,7 +7,9 @@ export default defineConfig({
     fs: {
       strict: false,
     },
-    historyApiFallback: true,
+    proxy: {
+      '/api': 'http://localhost:3000', // 👈 redirige las llamadas al backend
+    },
   },
 });
 

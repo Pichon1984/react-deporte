@@ -5,8 +5,9 @@ import '../styles/FormularioContacto.css';
 import logo from '../assets/img/logo.png';
 
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_TEMPLATE_ID_CONTACT = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_CONTACT;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
 
 export default function FormularioContacto() {
   const formRef = useRef();
@@ -19,14 +20,14 @@ export default function FormularioContacto() {
   emailjs
     .sendForm(
       EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
+      EMAILJS_TEMPLATE_ID_CONTACT,
       formRef.current,
       EMAILJS_PUBLIC_KEY
     )
     .then(() => {
       setEnviado(true);
       setError(false);
-      formRef.current.reset(); // ✅ limpia el formulario
+      formRef.current.reset();
     })
     .catch((error) => {
       console.error('Error al enviar:', error);
@@ -46,7 +47,7 @@ export default function FormularioContacto() {
             <img src={logo} alt="Logo de Pichón" style={{ width: '300px' }} />
           </div>
 
-          {/* Formulario */}
+     
           <div className="col-12 col-md-6">
             <h2 className="text-center mb-4">Contáctanos</h2>
 
