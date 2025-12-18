@@ -1,151 +1,102 @@
-import React, { useContext, useState } from "react";
-import { CarritoContext } from "../context/CarritoContext";
-import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-const CheckoutPage = () => {
-  const { carrito, vaciarCarrito } = useContext(CarritoContext);
-  const { usuario, token } = useContext(AuthContext);
-  const navigate = useNavigate();
+export default function CheckoutPage({ tipo }) {
+  const { id } = useParams(); // solo existe si es checkout por compra
+  const [compra, setCompra] = useState(null);
+  const [carrito, setCarrito] = useState([]);
+  const [envio, setEnvio] = useState(null);
+  const [error, setError] = useState(null);
 
-  // ✅ Precargamos datos del usuario registrado
-  const [cliente, setCliente] = useState({
-    nombre: usuario?.nombre || "",
-    email: usuario?.correo || "",
-    direccion: usuario?.direccion || "",
-    localidad: usuario?.localidad || "",
-    provincia: usuario?.provincia || "",
-    codigoPostal: usuario?.codigoPostal || "",
-    telefono: usuario?.telefono || ""
-  });
-
-  const calcularTotal = () =>
-    carrito.reduce(
-      (total, item) =>
-        total + Number(item.productoId?.precio || 0) * item.cantidad,
-      0
-    );
-
-  const handleCheckout = async () => {
+  async function iniciarCheckout() {
     try {
-      const res = await fetch("/api/ordenes/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": token // 👈 tu backend usa x-token
-        },
-        body: JSON.stringify({
-          cliente,
-          productos: carrito.map(item => ({
-            productoId: item.productoId._id,
-            nombre: item.productoId.nombre,
-            precio: item.productoId.precio,
-            cantidad: item.cantidad,
-            talle: item.talle
-          })),
-          total: calcularTotal()
-        })
-      });
+     const token = localStorage.getItem("token");
+const headers = { "x-token": token }; // 👈 nada de Bearer
 
-      const data = await res.json();
+const res = await fetch(`/api/compras/${id}`, { headers });
 
-      if (data.checkoutUrl) {
-        // 👈 redirige al checkout de MercadoPago
-        window.location.href = data.checkoutUrl;
+
+
+      if (tipo === "compra") {
+        // flujo por compra específica
+        const res = await fetch(`/api/compras/${id}`, { headers }); // 👈 ahora coincide con router
+        if (!res.ok) throw new Error("Error obteniendo compra");
+        const data = await res.json();
+        setCompra(data);
       } else {
-        alert("No se pudo iniciar el pago.");
+        // flujo por carrito completo
+        const carritoGuardado =
+          JSON.parse(localStorage.getItem("carrito")) || [];
+        setCarrito(carritoGuardado);
       }
-    } catch (error) {
-      console.error("Error al crear la orden:", error);
-      alert("Hubo un problema al procesar tu compra.");
+
+      // calcular envío (ejemplo con Andreani)
+      const envioRes = await fetch(
+        `/api/envios/andreani?origen=1000&destino=4000&peso=1`,
+        { headers }
+      );
+      if (!envioRes.ok) throw new Error("Error obteniendo envío");
+      const envioJson = await envioRes.json();
+      setEnvio(envioJson);
+    } catch (err) {
+      setError(err.message);
     }
-  };
+  }
+
+  useEffect(() => {
+    iniciarCheckout();
+  }, [id, tipo]);
+
+  if (error) return <p style={{ color: "red" }}>❌ {error}</p>;
 
   return (
-    <Container className="py-5">
-      <h2>Finalizar compra</h2>
-      <Row>
-        <Col md={6}>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.nombre}
-                onChange={e => setCliente({ ...cliente, nombre: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                value={cliente.email}
-                onChange={e => setCliente({ ...cliente, email: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Dirección</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.direccion}
-                onChange={e => setCliente({ ...cliente, direccion: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Localidad</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.localidad}
-                onChange={e => setCliente({ ...cliente, localidad: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Provincia</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.provincia}
-                onChange={e => setCliente({ ...cliente, provincia: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Código Postal</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.codigoPostal}
-                onChange={e =>
-                  setCliente({ ...cliente, codigoPostal: e.target.value })
-                }
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Teléfono</Form.Label>
-              <Form.Control
-                type="text"
-                value={cliente.telefono}
-                onChange={e => setCliente({ ...cliente, telefono: e.target.value })}
-              />
-            </Form.Group>
-          </Form>
-        </Col>
+    <div>
+      <h2>Checkout</h2>
 
-        <Col md={6} className="text-end">
-          <h4>Total: ${calcularTotal().toLocaleString("es-AR")}</h4>
-          <Button variant="success" className="mt-3" onClick={handleCheckout}>
-            Finalizar compra
-          </Button>
-        </Col>
-      </Row>
-    </Container>
+      {/* Flujo por compra específica */}
+      {tipo === "compra" && compra && (
+        <>
+          <h3>Compra</h3>
+          {Array.isArray(compra.productos) &&
+            compra.productos.map((item, idx) => (
+              <div key={idx}>
+                {item.nombre} - ${item.precio} x {item.cantidad}
+              </div>
+            ))}
+          <p>Total: ${compra.total}</p>
+        </>
+      )}
+
+      {/* Flujo por carrito completo */}
+      {tipo === "carrito" && carrito.length > 0 && (
+        <>
+          <h3>Carrito</h3>
+          {carrito.map((item, idx) => (
+            <div key={idx}>
+              {item.nombre} - ${item.precio} x {item.cantidad}
+            </div>
+          ))}
+          <p>
+            Total: $
+            {carrito.reduce(
+              (acc, item) => acc + item.precio * item.cantidad,
+              0
+            )}
+          </p>
+        </>
+      )}
+
+      {/* Envío */}
+      <h3>Envío</h3>
+      {envio ? (
+        <p>
+          Costo: ${envio.costo} | Tiempo: {envio.tiempo} días
+        </p>
+      ) : (
+        <p>Calculando envío...</p>
+      )}
+    </div>
   );
-};
-
-export default CheckoutPage;
-
-
-
-
-
-
+}
 
 

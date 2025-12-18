@@ -20,6 +20,11 @@ import CategoriaPage from "./components/CategoriaPage";
 
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 ahora correcto
 import CheckoutPage from "./PagesPrincipal/CheckoutPage";
+import Checkout from "./PagesPrincipal/CheckoutPage";
+import CheckoutResult from "./PagesPrincipal/CheckoutResult";
+import BuscarPage from "./PagesPrincipal/BuscarPage";
+
+
 
 function App() {
   return (
@@ -38,9 +43,17 @@ function App() {
           <Route path="/detalle/:id" element={<DetalleProducto />} />
           <Route path="/Cuenta" element={<Cuenta />} />
           <Route path="/registro" element={<Registro />} />
-           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/checkout/:id" element={<CheckoutPage tipo="compra" />} />
+          <Route path="/checkout-carrito" element={<CheckoutPage tipo="carrito" />} />
+
+          <Route path="/checkout/success/:id" element={<CheckoutResult tipo="success" />} />
+          <Route path="/checkout/failure/:id" element={<CheckoutResult tipo="failure" />} />
+          <Route path="/checkout/pending/:id" element={<CheckoutResult tipo="pending" />} />
+
+          <Route path="/buscar" element={<BuscarPage />} />
+
 
           {/* Páginas privadas */}
           <Route

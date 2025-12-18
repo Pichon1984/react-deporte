@@ -21,6 +21,44 @@ const CarritoPage = () => {
       0
     );
 
+  // 👉 función para confirmar compra desde carrito
+  async function confirmarCarrito() {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "application/json",
+        "x-token": token // 👈 coincide con tu middleware
+      };
+
+      // transformar carrito a la estructura que espera el modelo Compra
+      const productos = carrito.map(item => ({
+        productoId: item.productoId._id,
+        nombre: item.productoId.nombre,
+        precio: item.productoId.precio,
+        cantidad: item.cantidad,
+        talle: item.talle
+      }));
+
+      const total = calcularTotal();
+
+      const res = await fetch("/api/compras", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ productos, total })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // redirigir al checkout de la compra recién creada
+        navigate(`/checkout/${data._id}`);
+      } else {
+        console.error("Error creando compra desde carrito:", data.error);
+      }
+    } catch (err) {
+      console.error("Error en confirmarCarrito:", err);
+    }
+  }
+
   if (carrito.length === 0) {
     return (
       <Container
@@ -130,7 +168,7 @@ const CarritoPage = () => {
           <Button
             variant="success"
             className="mt-2"
-            onClick={() => navigate("/checkout")}
+            onClick={confirmarCarrito}
           >
             Terminar compra
           </Button>
@@ -148,10 +186,4 @@ const CarritoPage = () => {
 };
 
 export default CarritoPage;
-
-
-
-
-
-
 

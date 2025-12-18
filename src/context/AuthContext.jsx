@@ -5,27 +5,29 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
+  const [token, setToken] = useState(null); // 👈 nuevo estado para token
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
   // 🔄 Rehidratar sesión al montar
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) {
       setCargando(false);
       return;
     }
 
+    setToken(storedToken); // 👈 guardamos token en estado
+
     const cargarUsuario = async () => {
       try {
         const resp = await fetch("http://localhost:3000/api/auth/me", {
-          headers: { "x-token": token }
+          headers: { "x-token": storedToken }
         });
 
         if (resp.ok) {
           const data = await resp.json();
 
-          // ✅ Normalizamos el usuario para que siempre tenga "id"
           const usuarioData = {
             id: data._id || data.id,
             nombre: data.nombre,
@@ -42,9 +44,11 @@ export const AuthProvider = ({ children }) => {
           setUsuario(usuarioData);
         } else {
           setUsuario(null);
+          setToken(null);
         }
       } catch (err) {
         setUsuario(null);
+        setToken(null);
       } finally {
         setCargando(false);
       }
@@ -56,8 +60,8 @@ export const AuthProvider = ({ children }) => {
   // 👉 Login: guardar token y usuario
   const logIn = (usuarioData, token) => {
     localStorage.setItem("token", token);
+    setToken(token); // 👈 guardamos token en estado
 
-    // ✅ Normalizamos también aquí
     const usuarioNormalizado = {
       id: usuarioData._id || usuarioData.id,
       nombre: usuarioData.nombre,
@@ -78,11 +82,12 @@ export const AuthProvider = ({ children }) => {
   const logOut = () => {
     localStorage.removeItem("token");
     setUsuario(null);
+    setToken(null); // 👈 limpiamos token
     navigate("/inicio", { replace: true });
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, cargando, logIn, logOut }}>
+    <AuthContext.Provider value={{ usuario, token, cargando, logIn, logOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -90,10 +95,4 @@ export const AuthProvider = ({ children }) => {
 
 // 👇 Hook personalizado
 export const useAuth = () => useContext(AuthContext);
-
-
-
-
-
-
 

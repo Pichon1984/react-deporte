@@ -45,7 +45,7 @@ export function Inicio() {
         <Row className="g-4 justify-content-center">
   <Col md={4}>
     <Card className="h-100 text-center">
-      <Link to="/calzado" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/categoria/calzado" style={{ textDecoration: 'none', color: 'inherit' }}>
         <Card.Img
           variant="top"
           src={zapatilla}
@@ -60,7 +60,7 @@ export function Inicio() {
 
   <Col md={4}>
     <Card className="h-100 text-center">
-      <Link to="/indumentaria" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/categoria/indumentaria" style={{ textDecoration: 'none', color: 'inherit' }}>
         <Card.Img
           variant="top"
           src={camiseta}
@@ -75,7 +75,7 @@ export function Inicio() {
 
   <Col md={4}>
     <Card className="h-100 text-center">
-      <Link to="/accesorios" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/categoria/accesorios" style={{ textDecoration: 'none', color: 'inherit' }}>
         <Card.Img
           variant="top"
           src={pelota}
