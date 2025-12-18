@@ -7,10 +7,15 @@ const AdminUsuarios = () => {
 
   const fetchUsuarios = async (searchTerm = "") => {
     try {
-      const res = await fetch("http://localhost:3000/api/usuarios", {
+      const token = localStorage.getItem("token");
+      const url = searchTerm
+        ? `http://localhost:3000/api/usuarios?search=${encodeURIComponent(searchTerm)}`
+        : "http://localhost:3000/api/usuarios";
+
+      const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+          "x-token": token // ✅ usar x-token
         }
       });
 
@@ -38,7 +43,7 @@ const AdminUsuarios = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "x-token": token // ✅ usar x-token
         },
         body: JSON.stringify({ estado: !estado }),
       });
@@ -58,7 +63,7 @@ const AdminUsuarios = () => {
       await fetch(`http://localhost:3000/api/usuarios/${id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`
+          "x-token": token // ✅ usar x-token
         }
       });
       setUsuarios((prev) => prev.filter((u) => u._id !== id));
@@ -77,7 +82,7 @@ const AdminUsuarios = () => {
           <Form onSubmit={handleBuscar} className="mb-3 d-flex flex-column flex-md-row gap-2">
             <Form.Control
               type="text"
-              placeholder="Buscar por nombre o correo"
+              placeholder="Buscar por nombre, apellido o correo"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

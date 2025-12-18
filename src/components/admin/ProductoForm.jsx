@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Image, Spinner } from 'react-bootstrap';
 
 const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
@@ -13,8 +13,24 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
     ...productoInicial,
   });
 
+  const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [urlTemporal, setUrlTemporal] = useState('');
+
+  // 📥 Traer categorías desde backend
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/categorias");
+        const data = await res.json();
+        // si tu backend devuelve { categorias: [...] }
+        setCategorias(data.categorias || data);
+      } catch (err) {
+        console.error("Error cargando categorías:", err);
+      }
+    };
+    fetchCategorias();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,13 +57,12 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
 
     const nuevoProducto = {
       ...producto,
-      categoria: producto.categoria.toLowerCase(), // 👈 importante para backend
+      categoria: producto.categoria, // 👈 ahora es el _id
       talles,
       fechaCreacion: producto.fechaCreacion || new Date().toISOString()
     };
 
-    // 👇 Consola para verificar qué categoría se está enviando
-    console.log("Categoría seleccionada:", producto.categoria);
+    console.log("Categoría seleccionada (ID):", producto.categoria);
     console.log("Producto a guardar:", nuevoProducto);
 
     onGuardar(nuevoProducto);
@@ -65,6 +80,7 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
     setUrlTemporal('');
   };
 
+  // 📷 Subir imagen a Cloudinary
   const subirImagen = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -158,9 +174,11 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
               required
             >
               <option value="">Seleccionar categoría</option>
-              <option value="indumentaria">Indumentaria</option>
-              <option value="calzado">Calzado</option>
-              <option value="accesorios">Accesorios</option>
+              {Array.isArray(categorias) && categorias.map(cat => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.nombre}
+                </option>
+              ))}
             </Form.Select>
           </Form.Group>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ProductoForm from "./ProductoForm";
+import ProductoForm from "../admin/ProductoForm";
 
 const AdminProductos = () => {
   const [productos, setProductos] = useState([]);
@@ -11,11 +11,12 @@ const AdminProductos = () => {
     try {
       const res = await fetch("http://localhost:3000/api/productos", {
         headers: {
-          "Authorization": `Bearer ${token}`
+          "x-token": token // 👈 usamos x-token
         }
       });
       const data = await res.json();
-      setProductos(data);
+      // ajusta según tu backend: puede devolver { productos: [...] } o directamente un array
+      setProductos(data.productos || data);
     } catch (error) {
       console.error("Error cargando productos:", error);
     }
@@ -25,7 +26,7 @@ const AdminProductos = () => {
     fetchProductos();
   }, []);
 
-  // ✅ guardar producto con token
+  // ✅ guardar producto con x-token (POST vs PUT)
   const handleGuardar = async (producto) => {
     const token = localStorage.getItem("token");
     try {
@@ -39,7 +40,7 @@ const AdminProductos = () => {
         method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "x-token": token // 👈 usamos x-token
         },
         body: JSON.stringify(producto),
       });
@@ -54,7 +55,24 @@ const AdminProductos = () => {
 
   return (
     <div>
-      <button onClick={() => setProductoEditando({})}>Nuevo Producto</button>
+      {/* Botón para nuevo producto con envio/cuotas inicializados */}
+      <button
+        onClick={() =>
+          setProductoEditando({
+            nombre: "",
+            precio: "",
+            categoria: "",
+            stock: "",
+            descripcion: "",
+            tallesTexto: "",
+            imagenes: [],
+            envio: { costo: "", tiempo: "", metodos: [] },
+            cuotas: []
+          })
+        }
+      >
+        Nuevo Producto
+      </button>
 
       {productoEditando && (
         <ProductoForm
@@ -65,6 +83,34 @@ const AdminProductos = () => {
       )}
 
       {/* renderizar productos */}
+      <ul>
+        {productos.map((p) => (
+          <li key={p._id}>
+            <strong>{p.nombre}</strong> - ${p.precio}
+            <br />
+            <em>Categoría:</em> {p.categoria?.nombre || p.categoria} | <em>Stock:</em> {p.stock}
+            <br />
+            <em>Envío:</em> costo ${p.envio?.costo || 0}, tiempo {p.envio?.tiempo || 0} días, métodos: {(p.envio?.metodos || []).join(", ")}
+            <br />
+            <em>Cuotas:</em>{" "}
+            {p.cuotas && p.cuotas.length > 0
+              ? p.cuotas.map((c, i) => c.recommended_message || `${c.cantidad}x${c.monto}`).join(" | ")
+              : "Sin cuotas"}
+            <br />
+            <button
+              onClick={() =>
+                setProductoEditando({
+                  ...p,
+                  envio: p.envio || { costo: "", tiempo: "", metodos: [] },
+                  cuotas: p.cuotas || []
+                })
+              }
+            >
+              Editar
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

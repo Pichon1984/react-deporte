@@ -16,13 +16,16 @@ export const CarritoProvider = ({ children }) => {
     localStorage.setItem("carrito", JSON.stringify(carrito));
   }, [carrito]);
 
-  // ➕ Agregar producto desde catálogo
-  const agregarProducto = (producto, talle, cantidad = 1) => {
+  // ➕ Agregar producto desde catálogo (ahora con envío)
+  const agregarProducto = (producto, talle, cantidad = 1, envio = "") => {
     if (!producto?._id) return;
 
     setCarrito(prev => {
       const idx = prev.findIndex(
-        i => i.productoId?._id === producto._id && i.talle === talle
+        i =>
+          i.productoId?._id === producto._id &&
+          i.talle === talle &&
+          i.envio === envio
       );
 
       if (idx >= 0) {
@@ -30,16 +33,21 @@ export const CarritoProvider = ({ children }) => {
         nuevo[idx].cantidad += cantidad;
         return nuevo;
       } else {
-        return [...prev, { productoId: producto, talle, cantidad }];
+        return [
+          ...prev,
+          { productoId: producto, talle, cantidad, envio } // 🔹 guardamos envío
+        ];
       }
     });
   };
 
-  // ➕ Sumar unidad desde carrito (solo ID)
-  const sumarUnidad = (productoId, talle) => {
+  // ➕ Sumar unidad desde carrito (solo ID + talle + envío)
+  const sumarUnidad = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev.map(item =>
-        item.productoId?._id === productoId && item.talle === talle
+        item.productoId?._id === productoId &&
+        item.talle === talle &&
+        item.envio === envio
           ? { ...item, cantidad: item.cantidad + 1 }
           : item
       )
@@ -47,11 +55,13 @@ export const CarritoProvider = ({ children }) => {
   };
 
   // ➖ Eliminar una unidad
-  const eliminarProducto = (productoId, talle) => {
+  const eliminarProducto = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev
         .map(item =>
-          item.productoId?._id === productoId && item.talle === talle
+          item.productoId?._id === productoId &&
+          item.talle === talle &&
+          item.envio === envio
             ? { ...item, cantidad: item.cantidad - 1 }
             : item
         )
@@ -60,10 +70,15 @@ export const CarritoProvider = ({ children }) => {
   };
 
   // 🗑️ Eliminar producto completo
-  const eliminarProductoTotal = (productoId, talle) => {
+  const eliminarProductoTotal = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev.filter(
-        item => !(item.productoId?._id === productoId && item.talle === talle)
+        item =>
+          !(
+            item.productoId?._id === productoId &&
+            item.talle === talle &&
+            item.envio === envio
+          )
       )
     );
   };
