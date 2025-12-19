@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './Footer.css'; // Opcional para estilos personalizados
+import '../styles/Footer.css'
 import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import logo from '../assets/img/logo.png';
 

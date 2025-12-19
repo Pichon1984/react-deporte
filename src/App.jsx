@@ -18,31 +18,27 @@ import ResetPasswordPage from "./PagesPrincipal/ResetPasswordPage";
 import ForgotPasswordPage from "./PagesPrincipal/ForgotPasswordPage";
 import CategoriaPage from "./components/CategoriaPage";
 
-import ProtectedRoute from "./components/ProtectedRoute"; // 👈 ahora correcto
+import ProtectedRoute from "./components/ProtectedRoute";
 import CheckoutPage from "./PagesPrincipal/CheckoutPage";
-import Checkout from "./PagesPrincipal/CheckoutPage";
 import CheckoutResult from "./PagesPrincipal/CheckoutResult";
 import BuscarPage from "./PagesPrincipal/BuscarPage";
 
-
-
 function App() {
   return (
-    <>
+    <div className="layout">
       <NavigateApp />
-      <main className="main-content container mt-4">
+      <main className="main-content container mt-4 flex-grow-1">
         <Routes>
           {/* Páginas públicas */}
-          <Route path="/" element={<Inicio />} /> {/* 👈 home */}
+          <Route path="/" element={<Inicio />} />
           <Route path="/inicio" element={<Inicio />} />
-          <Route path="/Nosotros" element={<Nosotros />} />
-          <Route path="/Contacto" element={<Contacto />} />
-          <Route path="/Carrito" element={<Carrito />} />
-          <Route path="/Registro" element={<Registro />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/contacto" element={<Contacto />} />
+          <Route path="/carrito" element={<Carrito />} />
+          <Route path="/registro" element={<Registro />} />
           <Route path="/categoria/:nombre" element={<CategoriaPage />} />
           <Route path="/detalle/:id" element={<DetalleProducto />} />
-          <Route path="/Cuenta" element={<Cuenta />} />
-          <Route path="/registro" element={<Registro />} />
+          <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/checkout/:id" element={<CheckoutPage tipo="compra" />} />
@@ -53,7 +49,6 @@ function App() {
           <Route path="/checkout/pending/:id" element={<CheckoutResult tipo="pending" />} />
 
           <Route path="/buscar" element={<BuscarPage />} />
-
 
           {/* Páginas privadas */}
           <Route
@@ -78,10 +73,9 @@ function App() {
         </Routes>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 
 export default App;
-
 

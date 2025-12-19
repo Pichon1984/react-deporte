@@ -1,0 +1,31 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenido {
+  flex: 1; /* 👈 esto empuja el footer hacia abajo */
+}
+
+footer {
+  background: #333;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+
+
+
+@media (max-width: 768px) {
+  .border-end {
+    border-right: 1px solid #fff !important;
+  }
+}
+
