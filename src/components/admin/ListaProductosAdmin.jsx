@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
   const navigate = useNavigate();
 
+  const getImagenProducto = (p) =>
+    p.imagenes?.[0] || p.img || p.imagen || "/placeholder.jpg";
+
   return (
     <Row>
       {productos.map((p, i) => (
@@ -13,12 +16,14 @@ const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/detalle/${p._id || p.id}`)}
           >
-            <Card.Img
-              variant="top"
-              src={p.imagenes?.[0] || "/placeholder.jpg"}
-              alt={p.nombre}
-              style={{ height: "140px", objectFit: "contain" }}
-            />
+           <Card.Img
+  variant="top"
+  src={p.imagenes?.[0] || p.img || p.imagen || "/placeholder.jpg"}
+  alt={p.nombre || "Producto"}
+  style={{ height: "200px", objectFit: "contain" }}
+/>
+
+
             <Card.Body>
               <Card.Title>{p.nombre}</Card.Title>
               <p>Precio: ${p.precio}</p>

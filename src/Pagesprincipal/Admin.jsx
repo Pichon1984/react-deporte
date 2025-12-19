@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Alert, Container, Row, Col } from "react-bootstrap";
 import FiltroProductos from "../components/admin/FiltroProductos";
 import ListaProductosAdmin from "../components/admin/ListaProductosAdmin";
 import ProductoModal from "../components/admin/ProductoModal";
 import AdminUsuarios from "../components/admin/AdminUsuarios";
 import AdminConsultas from "../components/admin/AdminConsultas";
+import AdminCompras from "../components/admin/AdminCompras";
 
 const Admin = () => {
   const [seccion, setSeccion] = useState("productos");
@@ -12,8 +13,8 @@ const Admin = () => {
   const [filtros, setFiltros] = useState({ nombre: "", categoria: "", talle: "" });
   const [productoActual, setProductoActual] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
 
-  // cargar productos
   useEffect(() => {
     const fetchProductos = async () => {
       const token = localStorage.getItem("token");
@@ -25,8 +26,9 @@ const Admin = () => {
         const data = await res.json();
         const productosArray = Array.isArray(data) ? data : data.productos || [];
         setProductos(productosArray);
+        setMensaje({ tipo: "success", texto: "Productos cargados correctamente" });
       } catch (error) {
-        console.error("Error cargando productos:", error);
+        setMensaje({ tipo: "danger", texto: "Error cargando productos" });
       }
     };
     fetchProductos();
@@ -51,14 +53,16 @@ const Admin = () => {
         });
       }
       const data = await res.json();
+      const productoGuardado = data.producto || data;
       setProductos((prev) =>
         producto._id
-          ? prev.map((p) => (p._id === producto._id ? data : p))
-          : [...prev, data]
+          ? prev.map((p) => (p._id === producto._id ? productoGuardado : p))
+          : [...prev, productoGuardado]
       );
       setShowModal(false);
+      setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
     } catch (error) {
-      console.error("Error guardando producto:", error);
+      setMensaje({ tipo: "danger", texto: "Error guardando producto" });
     }
   };
 
@@ -73,8 +77,9 @@ const Admin = () => {
       });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       setProductos((prev) => prev.filter((p) => p._id !== id));
+      setMensaje({ tipo: "success", texto: "Producto eliminado correctamente" });
     } catch (error) {
-      console.error("Error eliminando producto:", error);
+      setMensaje({ tipo: "danger", texto: "Error eliminando producto" });
     }
   };
 
@@ -92,39 +97,60 @@ const Admin = () => {
   });
 
   return (
-    <div className="container-fluid mt-4">
-      <h2>Panel de Administración</h2>
-      <div className="row">
+    <Container fluid className="mt-4">
+      <h2 className="mb-3">Panel de Administración</h2>
+
+      {mensaje && (
+        <Alert
+          variant={mensaje.tipo}
+          onClose={() => setMensaje(null)}
+          dismissible
+        >
+          {mensaje.texto}
+        </Alert>
+      )}
+
+      <Row>
         {/* Sidebar */}
-        <div className="col-12 col-md-3 mb-3">
-          <div className="d-flex flex-md-column gap-2">
+        <Col xs={12} md={3} className="mb-3">
+          <div className="d-flex flex-wrap flex-md-column gap-2">
             <Button
               variant={seccion === "productos" ? "primary" : "outline-primary"}
               onClick={() => setSeccion("productos")}
+              className="w-100"
             >
               Productos
             </Button>
             <Button
               variant={seccion === "usuarios" ? "primary" : "outline-primary"}
               onClick={() => setSeccion("usuarios")}
+              className="w-100"
             >
               Usuarios
             </Button>
             <Button
               variant={seccion === "consultas" ? "primary" : "outline-primary"}
               onClick={() => setSeccion("consultas")}
+              className="w-100"
             >
               Consultas
             </Button>
+            <Button
+              variant={seccion === "compras" ? "primary" : "outline-primary"}
+              onClick={() => setSeccion("compras")}
+              className="w-100"
+            >
+              Compras
+            </Button>
           </div>
-        </div>
+        </Col>
 
         {/* Contenido */}
-        <div className="col-12 col-md-9">
+        <Col xs={12} md={9}>
           {seccion === "productos" && (
             <>
               <Button
-                className="mt-2"
+                className="mt-2 mb-3"
                 onClick={() => {
                   setProductoActual({
                     nombre: "",
@@ -143,14 +169,16 @@ const Admin = () => {
 
               <FiltroProductos filtros={filtros} setFiltros={setFiltros} />
 
-              <ListaProductosAdmin
-                productos={productosFiltrados}
-                onEditar={(p) => {
-                  setProductoActual(p);
-                  setShowModal(true);
-                }}
-                onEliminar={handleEliminar}
-              />
+              <div className="table-responsive mt-3">
+                <ListaProductosAdmin
+                  productos={productosFiltrados}
+                  onEditar={(p) => {
+                    setProductoActual(p);
+                    setShowModal(true);
+                  }}
+                  onEliminar={handleEliminar}
+                />
+              </div>
 
               <ProductoModal
                 show={showModal}
@@ -161,11 +189,26 @@ const Admin = () => {
             </>
           )}
 
-          {seccion === "usuarios" && <AdminUsuarios />}
-          {seccion === "consultas" && <AdminConsultas />}
-        </div>
-      </div>
-    </div>
+          {seccion === "usuarios" && (
+            <div className="table-responsive">
+              <AdminUsuarios />
+            </div>
+          )}
+
+          {seccion === "consultas" && (
+            <div className="table-responsive">
+              <AdminConsultas />
+            </div>
+          )}
+
+          {seccion === "compras" && (
+            <div className="table-responsive">
+              <AdminCompras />
+            </div>
+          )}
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

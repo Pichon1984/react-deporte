@@ -88,7 +88,12 @@ function CategoriaPage() {
                 <div style={{ height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Card.Img
                     variant="top"
-                    src={producto.img || '/placeholder.jpg'}
+                    src={
+                      producto.imagenes?.[0] ||   // ✅ si es array de URLs (links externos)
+                      producto.img ||             // ✅ si se guardó en un campo único
+                      producto.imagen ||          // ✅ si se guardó como "imagen"
+                      '/placeholder.jpg'          // fallback si no hay nada
+                    }
                     alt={producto.nombre}
                     style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                   />
@@ -109,4 +114,5 @@ function CategoriaPage() {
 }
 
 export default CategoriaPage;
+
 

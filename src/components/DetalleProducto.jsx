@@ -13,7 +13,7 @@ function DetalleProducto() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [talleSeleccionado, setTalleSeleccionado] = useState('');
   const [cantidad, setCantidad] = useState(1);
-  const [mostrarToast, setMostrarToast] = useState(false);
+  const [mostrarToast, setMostrarToast] = useState(false); // Si luego querés reemplazar por Alert, podés hacerlo en el layout general
   const { agregarProducto } = useContext(CarritoContext);
 
   const [mensajeConsulta, setMensajeConsulta] = useState('');
@@ -21,7 +21,11 @@ function DetalleProducto() {
   const [cuotasMP, setCuotasMP] = useState([]);
   const [envioAndreani, setEnvioAndreani] = useState(null);
 
-  // ✅ cargar producto
+  // Control de expandir/comprimir descripción
+  const [expandido, setExpandido] = useState(false);
+  const limiteDescripcion = 250;
+
+  // Cargar producto
   useEffect(() => {
     const fetchProducto = async () => {
       try {
@@ -35,11 +39,11 @@ function DetalleProducto() {
     if (id) fetchProducto();
   }, [id]);
 
-  // ✅ traer cuotas reales de MercadoPago
+  // Cuotas reales de MercadoPago
   useEffect(() => {
     const fetchCuotas = async () => {
       try {
-        const metodos = ["visa", "master", "naranja"];
+        const metodos = ['visa', 'master', 'naranja'];
         const resultados = await Promise.all(
           metodos.map(async (metodo) => {
             const res = await fetch(
@@ -55,13 +59,13 @@ function DetalleProducto() {
         );
         setCuotasMP(resultados);
       } catch (error) {
-        console.error("Error cargando cuotas MercadoPago:", error);
+        console.error('Error cargando cuotas MercadoPago:', error);
       }
     };
     if (producto?.precio) fetchCuotas();
   }, [producto]);
 
-  // ✅ traer cotización de envío con Andreani
+  // Cotización de envío con Andreani
   useEffect(() => {
     const fetchEnvioAndreani = async () => {
       try {
@@ -71,7 +75,7 @@ function DetalleProducto() {
         const data = await res.json();
         setEnvioAndreani(data);
       } catch (error) {
-        console.error("Error obteniendo envío Andreani:", error);
+        console.error('Error obteniendo envío Andreani:', error);
       }
     };
     if (producto) fetchEnvioAndreani();
@@ -79,13 +83,23 @@ function DetalleProducto() {
 
   if (!producto) return <h2 className="text-center py-5">Producto no encontrado</h2>;
 
+  const imagenes = (producto.imagenes && producto.imagenes.length > 0)
+    ? producto.imagenes
+    : [producto.img || '/placeholder.jpg'];
+
+  // Descripción formateada y truncada
+  const descripcionVisible =
+    producto.descripcion?.length > limiteDescripcion && !expandido
+      ? producto.descripcion.substring(0, limiteDescripcion) + '…'
+      : producto.descripcion;
+
   const handleAgregar = () => {
     if (producto.talles?.length && !talleSeleccionado) {
       alert('Seleccioná un talle');
       return;
     }
-    if (cantidad < 1 || cantidad > producto.stock) {
-      alert(`Solo hay ${producto.stock} unidades disponibles`);
+    if (cantidad < 1 || cantidad > (producto.stock || 0)) {
+      alert(`Solo hay ${producto.stock} unidad(es) disponible(s)`);
       return;
     }
     if (producto.envio?.metodos?.length > 0 && !envioSeleccionado) {
@@ -100,9 +114,9 @@ function DetalleProducto() {
   };
 
   const handleEnviarConsulta = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (!token) {
-      alert("Debes iniciar sesión para enviar una consulta");
+      alert('Debes iniciar sesión para enviar una consulta');
       return;
     }
 
@@ -131,13 +145,10 @@ function DetalleProducto() {
     }
   };
 
-  const imagenes = (producto.imagenes && producto.imagenes.length > 0)
-    ? producto.imagenes
-    : [producto.img || '/placeholder.jpg'];
-
   return (
     <Container className="py-5">
       <Row className="align-items-start">
+        {/* Imágenes */}
         <Col xs={12} md={7} className="mb-3">
           <ImagenPrincipal imagen={imagenes[selectedIndex] || '/placeholder.jpg'} />
           <div className="mt-3">
@@ -149,21 +160,42 @@ function DetalleProducto() {
           </div>
         </Col>
 
+        {/* Info principal */}
         <Col xs={12} md={5}>
           <h2>{producto.nombre}</h2>
           <p className="text-muted">Código: {producto._id}</p>
           <p className="text-muted">Categoría: {producto.categoria?.nombre || producto.categoria}</p>
-          <p>{producto.descripcion}</p>
-          <h4 className="text-success">${producto.precio}</h4>
 
-          {/* 👟 Selección de talles */}
+          {/* Descripción formateada y truncada */}
+          <div className="descripcion">
+            {descripcionVisible
+              ?.split('\n')
+              .map((linea, i) => (
+                <p key={i} className="mb-1">
+                  {linea}
+                </p>
+              ))}
+            {producto.descripcion?.length > limiteDescripcion && (
+              <Button
+                variant="link"
+                className="p-0 mt-2"
+                onClick={() => setExpandido(!expandido)}
+              >
+                {expandido ? 'Ver menos' : 'Ver más'}
+              </Button>
+            )}
+          </div>
+
+          <h4 className="text-success mt-3">${producto.precio}</h4>
+
+          {/* Talles */}
           {producto.talles?.length > 0 && (
             <div className="mt-3">
               <h5>Selecciona un talle</h5>
               {producto.talles.map((talle) => (
                 <Button
                   key={talle}
-                  variant={talleSeleccionado === talle ? "primary" : "outline-primary"}
+                  variant={talleSeleccionado === talle ? 'primary' : 'outline-primary'}
                   className="me-2 mb-2"
                   onClick={() => setTalleSeleccionado(talle)}
                 >
@@ -173,26 +205,65 @@ function DetalleProducto() {
             </div>
           )}
 
-          {/* 📦 Opciones de envío */}
+          {/* Cantidad */}
+          <div className="mt-3">
+            <Form.Label>Cantidad</Form.Label>
+            <Form.Control
+              type="number"
+              min={1}
+              max={producto.stock || 1}
+              value={cantidad}
+              onChange={(e) => setCantidad(Number(e.target.value))}
+              style={{ maxWidth: 140 }}
+            />
+            <p className="text-muted mt-1">
+              Stock: {producto.stock ?? 0}
+            </p>
+          </div>
+
+          {/* Envío */}
           <div className="mt-3">
             <h5>Opciones de envío</h5>
             {envioAndreani ? (
-              <p><strong>Andreani:</strong> ${envioAndreani.price} - {envioAndreani.estimated_days} días</p>
+              <p>
+                <strong>Andreani:</strong> ${envioAndreani.price} — {envioAndreani.estimated_days} días
+              </p>
             ) : (
               <p className="text-muted">Consultando envío con Andreani...</p>
+            )}
+
+            {Array.isArray(producto.envio?.metodos) && producto.envio.metodos.length > 0 && (
+              <>
+                <Form.Label>Seleccioná método de envío</Form.Label>
+                <div>
+                  {producto.envio.metodos.map((m) => (
+                    <Form.Check
+                      key={m}
+                      inline
+                      type="radio"
+                      name="envio"
+                      label={m}
+                      value={m}
+                      checked={envioSeleccionado === m}
+                      onChange={(e) => setEnvioSeleccionado(e.target.value)}
+                      className="me-2 mb-2"
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
           <Button
             variant="primary"
             onClick={handleAgregar}
-            disabled={producto.stock === 0}
+            disabled={(producto.stock || 0) === 0}
             className="mt-3"
           >
             Agregar al carrito
           </Button>
 
-          {/* 💳 Cuotas reales con MercadoPago */}
+          {/* Cuotas MercadoPago */}
           <div className="mt-3">
             <h5>Cuotas con MercadoPago</h5>
             {cuotasMP.length > 0 ? (
@@ -223,8 +294,9 @@ function DetalleProducto() {
         </Col>
       </Row>
 
+      {/* Consultas */}
       <Row className="mt-4">
-        <Col>
+        <Col xs={12}>
           <h5>Consultas de otros clientes</h5>
           <ListaConsultas productoId={producto._id} />
 
