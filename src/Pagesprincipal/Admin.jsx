@@ -6,6 +6,7 @@ import ProductoModal from "../components/admin/ProductoModal";
 import AdminUsuarios from "../components/admin/AdminUsuarios";
 import AdminConsultas from "../components/admin/AdminConsultas";
 import AdminCompras from "../components/admin/AdminCompras";
+import { API_URL } from "../services/api";
 
 const Admin = () => {
   const [seccion, setSeccion] = useState("productos");
@@ -20,7 +21,7 @@ const Admin = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await fetch("http://localhost:3000/api/productos", {
+        const res = await fetch(`${API_URL}/api/productos`, {
           headers: { "x-token": token }
         });
         const data = await res.json();
@@ -40,13 +41,13 @@ const Admin = () => {
     try {
       let res;
       if (producto._id) {
-        res = await fetch(`http://localhost:3000/api/productos/${producto._id}`, {
+        res = await fetch(`${API_URL}/api/productos/${producto._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", "x-token": token },
           body: JSON.stringify(producto),
         });
       } else {
-        res = await fetch("http://localhost:3000/api/productos", {
+        res = await fetch(`${API_URL}/api/productos`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-token": token },
           body: JSON.stringify(producto),
@@ -71,7 +72,7 @@ const Admin = () => {
     if (!token) return;
     if (!window.confirm("¿Eliminar este producto?")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/productos/${id}`, {
+      const res = await fetch(`${API_URL}/api/productos/${id}`, {
         method: "DELETE",
         headers: { "x-token": token }
       });
