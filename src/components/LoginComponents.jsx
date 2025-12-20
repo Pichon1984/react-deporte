@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // 👈 usar el hook
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/img/logo.png";
+
+const API_URL = import.meta.env.VITE_API_URL; // 👈 ahora configurable
 
 const LoginComponent = () => {
   const [correo, setCorreo] = useState("");
   const [contraseña, setContraseña] = useState("");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { logIn } = useAuth(); // 👈 ahora sí
+  const { logIn } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const resp = await fetch("http://localhost:3000/api/auth/login", {
+      const resp = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, password: contraseña }),
@@ -38,7 +40,7 @@ const LoginComponent = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
-      logIn(usuario, data.token); // 👈 guarda usuario en contexto
+      logIn(usuario, data.token);
 
       if (usuario.rol === "ADMIN") {
         navigate("/admin");
@@ -110,8 +112,3 @@ const LoginComponent = () => {
 };
 
 export default LoginComponent;
-
-
-
-
-
