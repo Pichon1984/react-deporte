@@ -41,26 +41,15 @@ const Registro = () => {
         return setError(data.msg || "Error en registro");
       }
 
-      const usuario = {
-        id: data.usuario._id,
-        nombre: data.usuario.nombre,
-        apellido: data.usuario.apellido,
-        correo: data.usuario.correo,
-        rol: (data.usuario.rol || "").toUpperCase(),
-        telefono: data.usuario.telefono,
-        direccion: data.usuario.direccion,
-        provincia: data.usuario.provincia,
-        localidad: data.usuario.localidad,
-        codigoPostal: data.usuario.codigoPostal,
-        dni: data.usuario.dni
-      };
+      // ✅ Usar directamente el objeto que devuelve el backend
+      const usuario = data.usuario;
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
       logIn(usuario, data.token);
 
-      if (usuario.rol === "ADMIN") {
+      if ((usuario.rol || "").toUpperCase() === "ADMIN") {
         navigate("/admin");
       } else {
         navigate("/cliente");
@@ -129,6 +118,8 @@ const Registro = () => {
 };
 
 export default Registro;
+
+
 
 
 
