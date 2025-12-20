@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 
 import Inicio from "./PagesPrincipal/Inicio";
 import Contacto from "./PagesPrincipal/Contacto";
-import { Nosotros } from "./PagesPrincipal/Nosotros";
+import Nosotros from "./PagesPrincipal/Nosotros"; // ✅ corregido (import default)
 import Cuenta from "./PagesPrincipal/Cuenta";
 import Carrito from "./PagesPrincipal/Carrito";
 import Registro from "./PagesPrincipal/Registro";
@@ -19,8 +19,13 @@ import ForgotPasswordPage from "./PagesPrincipal/ForgotPasswordPage";
 import CategoriaPage from "./components/CategoriaPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-import CheckoutPage from "./PagesPrincipal/CheckoutPage";
-import CheckoutResult from "./PagesPrincipal/CheckoutResult";
+
+// ✅ Importamos los componentes de checkout
+import { CheckoutButton } from "./components/CheckoutButton";
+import { CheckoutSuccess } from "./PagesPrincipal/CheckoutSuccess";
+import { CheckoutFailure } from "./PagesPrincipal/CheckoutFailure";
+import { CheckoutPending } from "./PagesPrincipal/CheckoutPending";
+
 import BuscarPage from "./PagesPrincipal/BuscarPage";
 
 function App() {
@@ -41,12 +46,12 @@ function App() {
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/checkout/:id" element={<CheckoutPage tipo="compra" />} />
-          <Route path="/checkout-carrito" element={<CheckoutPage tipo="carrito" />} />
 
-          <Route path="/checkout/success/:id" element={<CheckoutResult tipo="success" />} />
-          <Route path="/checkout/failure/:id" element={<CheckoutResult tipo="failure" />} />
-          <Route path="/checkout/pending/:id" element={<CheckoutResult tipo="pending" />} />
+          {/* Checkout */}
+          <Route path="/checkout" element={<CheckoutButton />} />
+          <Route path="/checkout/success/:id" element={<CheckoutSuccess />} />
+          <Route path="/checkout/failure/:id" element={<CheckoutFailure />} />
+          <Route path="/checkout/pending/:id" element={<CheckoutPending />} />
 
           <Route path="/buscar" element={<BuscarPage />} />
 
