@@ -19,8 +19,8 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres");
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
@@ -30,18 +30,18 @@ const ResetPasswordPage = () => {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/reset-password`,
+        `${import.meta.env.VITE_API_URL}/api/auth/reset-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, newPassword: password }), // 👈 corregido
+          body: JSON.stringify({ token, newPassword: password }),
         }
       );
 
       const data = await res.json();
 
       if (res.ok) {
-        setMensaje(data.msg);
+        setMensaje(data.msg || "Contraseña actualizada correctamente ✅");
       } else {
         setError(data.msg || "Error al restablecer la contraseña");
       }
@@ -101,4 +101,3 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
-
