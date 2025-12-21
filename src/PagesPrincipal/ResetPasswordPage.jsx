@@ -1,7 +1,5 @@
 import { useState } from "react";
-import '../styles/ResetPasswordPage.css';
-
-
+import "../styles/ResetPasswordPage.css";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
@@ -31,11 +29,14 @@ const ResetPasswordPage = () => {
     setMensaje(null);
 
     try {
-      const res = await fetch("http://localhost:3000/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, nuevaPassword: password }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword: password }), // 👈 corregido
+        }
+      );
 
       const data = await res.json();
 
@@ -83,7 +84,11 @@ const ResetPasswordPage = () => {
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  disabled={loading}
+                >
                   {loading ? "Guardando..." : "Guardar nueva contraseña"}
                 </button>
               </form>
