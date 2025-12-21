@@ -1,5 +1,5 @@
 import { useState } from "react";
-import emailjs from "emailjs-com"; // 👈 importa EmailJS
+import emailjs from "@emailjs/browser";
 import "../styles/ForgotPasswordPage.css";
 
 const ForgotPasswordPage = () => {
