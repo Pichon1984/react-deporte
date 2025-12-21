@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/img/logo.png";
 
-const API_URL = import.meta.env.VITE_API_URL; // 👈 ahora configurable
+const API_URL = import.meta.env.VITE_API_URL; // 👈 configurable desde .env
 
 const LoginComponent = () => {
   const [correo, setCorreo] = useState("");
@@ -14,6 +14,7 @@ const LoginComponent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
 
     try {
       const resp = await fetch(`${API_URL}/api/auth/login`, {
@@ -22,10 +23,23 @@ const LoginComponent = () => {
         body: JSON.stringify({ correo, password: contraseña }),
       });
 
+      // Si la respuesta no es OK, intento leer el mensaje
+      if (!resp.ok) {
+        let msg = "Error en login";
+        try {
+          const dataError = await resp.json();
+          msg = dataError.msg || msg;
+        } catch {
+          if (resp.status === 404) msg = "Ruta de login no encontrada (404)";
+          if (resp.status === 403) msg = "Acceso prohibido (403)";
+        }
+        return setError(msg);
+      }
+
       const data = await resp.json();
 
-      if (!resp.ok) {
-        return setError(data.msg || "Error en login");
+      if (!data.usuario || !data.token) {
+        return setError("Respuesta inválida del servidor");
       }
 
       const usuario = {
@@ -51,7 +65,7 @@ const LoginComponent = () => {
       }
     } catch (error) {
       console.error(error);
-      setError("Error en el servidor");
+      setError("Error en el servidor o CORS bloqueado");
     }
   };
 
@@ -112,3 +126,5 @@ const LoginComponent = () => {
 };
 
 export default LoginComponent;
+
+
