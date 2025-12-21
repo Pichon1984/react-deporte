@@ -1,5 +1,4 @@
 import { useState } from "react";
-import emailjs from "@emailjs/browser";
 import "../styles/ForgotPasswordPage.css";
 
 const ForgotPasswordPage = () => {
@@ -7,11 +6,6 @@ const ForgotPasswordPage = () => {
   const [mensaje, setMensaje] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Variables desde tu .env
-  const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-  const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_RESET;
-  const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,34 +15,25 @@ const ForgotPasswordPage = () => {
     setMensaje(null);
 
     try {
-      // 1. Llamada al backend para generar token
-      const res = await fetch("http://localhost:3000/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo: email }),
-      });
+      // Llamada al backend (Vercel) para generar token y enviar correo
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ correo: email }),
+        }
+      );
 
       const data = await res.json();
 
-      if (!data.token) {
-        setError(data.msg || "Error al generar token");
-        return;
+      if (!res.ok) {
+        setError(data.msg || "Error al enviar correo de recuperación");
+      } else {
+        setMensaje(data.msg || "Correo de recuperación enviado correctamente");
       }
-
-      // 2. Armar el enlace de recuperación
-      const resetLink = `http://localhost:3000/reset-password?token=${data.token}`;
-
-      // 3. Enviar correo con EmailJS
-      await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        { to_email: email, reset_link: resetLink },
-        PUBLIC_KEY
-      );
-
-      setMensaje("Correo de recuperación enviado correctamente");
     } catch (err) {
-      setError("Error al enviar correo de recuperación");
+      setError("Error al conectar con el servidor");
     } finally {
       setLoading(false);
     }
@@ -76,7 +61,11 @@ const ForgotPasswordPage = () => {
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  disabled={loading}
+                >
                   {loading ? "Enviando..." : "Enviar enlace"}
                 </button>
               </form>
@@ -84,7 +73,6 @@ const ForgotPasswordPage = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };
