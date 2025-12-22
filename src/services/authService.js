@@ -1,4 +1,5 @@
-import { API_URL } from "../config/api";
+import { API_URL } from "./api";
+
 
 // Registro de usuario
 export async function register(datos) {
