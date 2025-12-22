@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { resetPassword } from "../services/authService"; // 👈 usamos el servicio centralizado
 import "../styles/ResetPasswordPage.css";
 
 const ResetPasswordPage = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const token = searchParams.get("token"); // 👈 viene del link enviado por email
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mensaje, setMensaje] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,23 +32,17 @@ const ResetPasswordPage = () => {
     setMensaje(null);
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/reset-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, newPassword: password }),
-        }
-      );
+      const resp = await resetPassword(token, password);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMensaje(data.msg || "Contraseña actualizada correctamente ✅");
+      if (resp.msg) {
+        setMensaje(resp.msg);
+        // Redirigir al login después de unos segundos
+        setTimeout(() => navigate("/login"), 3000);
       } else {
-        setError(data.msg || "Error al restablecer la contraseña");
+        setError("Error al restablecer la contraseña");
       }
     } catch (err) {
+      console.error(err);
       setError("Error de conexión con el servidor");
     } finally {
       setLoading(false);
@@ -92,6 +89,12 @@ const ResetPasswordPage = () => {
                   {loading ? "Guardando..." : "Guardar nueva contraseña"}
                 </button>
               </form>
+
+              <div className="text-center mt-3">
+                <Link to="/login" className="text-decoration-none">
+                  Volver al login
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -101,3 +104,4 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
+

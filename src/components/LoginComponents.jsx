@@ -13,61 +13,61 @@ const LoginComponent = () => {
   const { logIn } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+  e.preventDefault();
+  setError(null);
 
-    try {
-      const resp = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo, password: contraseña }),
-      });
+  try {
+    const resp = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo, password: contraseña }),
+    });
 
-      // Si la respuesta no es OK, intento leer el mensaje
-      if (!resp.ok) {
-        let msg = "Error en login";
-        try {
-          const dataError = await resp.json();
-          msg = dataError.msg || msg;
-        } catch {
-          if (resp.status === 404) msg = "Ruta de login no encontrada (404)";
-          if (resp.status === 403) msg = "Acceso prohibido (403)";
-        }
-        return setError(msg);
+    if (!resp.ok) {
+      let msg = "Error en login";
+      try {
+        const dataError = await resp.json();
+        msg = dataError.msg || msg;
+      } catch {
+        if (resp.status === 404) msg = "Ruta de login no encontrada (404)";
+        if (resp.status === 403) msg = "Acceso prohibido (403)";
       }
-
-      const data = await resp.json();
-
-      if (!data.usuario || !data.token) {
-        return setError("Respuesta inválida del servidor");
-      }
-
-      const usuario = {
-        id: data.usuario._id,
-        nombre: data.usuario.nombre,
-        correo: data.usuario.correo,
-        rol: (data.usuario.rol || "").toUpperCase(),
-        telefono: data.usuario.telefono,
-        direccion: data.usuario.direccion,
-      };
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
-
-      logIn(usuario, data.token);
-
-      if (usuario.rol === "ADMIN") {
-        navigate("/admin");
-      } else if (usuario.rol === "CLIENTE") {
-        navigate("/cliente");
-      } else {
-        navigate("/inicio");
-      }
-    } catch (error) {
-      console.error(error);
-      setError("Error en el servidor o CORS bloqueado");
+      return setError(msg);
     }
-  };
+
+    const data = await resp.json();
+
+    if (!data.usuario || !data.token) {
+      return setError("Respuesta inválida del servidor");
+    }
+
+    const usuario = {
+      id: data.usuario.id, // 👈 corregido
+      nombre: data.usuario.nombre,
+      correo: data.usuario.correo,
+      rol: (data.usuario.rol || "").toUpperCase(),
+      telefono: data.usuario.telefono,
+      direccion: data.usuario.direccion,
+    };
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("usuario", JSON.stringify(usuario));
+
+    logIn(usuario, data.token);
+
+    if (usuario.rol === "ADMIN") {
+      navigate("/admin");
+    } else if (usuario.rol === "CLIENTE") {
+      navigate("/cliente");
+    } else {
+      navigate("/inicio");
+    }
+  } catch (error) {
+    console.error(error);
+    setError("Error en el servidor o CORS bloqueado");
+  }
+};
+
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
