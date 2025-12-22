@@ -34,7 +34,7 @@ export async function forgotPassword(correo) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ correo })
+    body: JSON.stringify({  correo: "usuario@correo.com" })
   });
   return res.json();
 }
