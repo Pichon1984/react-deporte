@@ -1,5 +1,4 @@
-import { API_URL } from "./api";
-
+import { API_URL } from "../services/api";
 
 // Registro de usuario
 export async function register(datos) {
@@ -34,7 +33,7 @@ export async function forgotPassword(correo) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({  correo: "usuario@correo.com" })
+    body: JSON.stringify({ correo })
   });
   return res.json();
 }
