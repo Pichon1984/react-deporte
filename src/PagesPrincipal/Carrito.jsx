@@ -107,15 +107,23 @@ const CarritoPage = () => {
           {/* Imagen */}
           <Col xs={4} md={2}>
             <Image
-              src={item.productoId?.imagen || "/assets/img/default.png"}
+              src={
+                item.productoId?.imagenes?.[0] ||
+                item.productoId?.img ||
+                item.productoId?.imagen ||
+                "/assets/img/default.png"
+              }
               alt={item.productoId?.nombre}
               fluid
               rounded
               onError={(e) => {
-                e.target.src = "/assets/img/default.png";
+                e.currentTarget.onerror = null; // evita loop
+                e.currentTarget.src = "/assets/img/default.png";
               }}
             />
           </Col>
+
+
 
           {/* Info producto */}
           <Col xs={8} md={6}>

@@ -1,26 +1,29 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Form, Button } from "react-bootstrap";
+import { Container, Row, Col, Table, Form, Button, Pagination } from "react-bootstrap";
 
 const AdminUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1); // ✅ página actual
+  const [totalPages, setTotalPages] = useState(1); // ✅ total de páginas
 
-  const fetchUsuarios = async (searchTerm = "") => {
+  const fetchUsuarios = async (searchTerm = "", pageNumber = 1) => {
     try {
       const token = localStorage.getItem("token");
       const url = searchTerm
-        ? `http://localhost:3000/api/usuarios?search=${encodeURIComponent(searchTerm)}`
-        : "http://localhost:3000/api/usuarios";
+        ? `http://localhost:3000/api/usuarios?search=${encodeURIComponent(searchTerm)}&page=${pageNumber}&limit=10`
+        : `http://localhost:3000/api/usuarios?page=${pageNumber}&limit=10`;
 
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          "x-token": token // ✅ usar x-token
+          "x-token": token
         }
       });
 
       const data = await res.json();
       setUsuarios(data.usuarios || []);
+      setTotalPages(data.totalPages || 1); // ✅ backend debe devolver totalPages
     } catch (error) {
       console.error("Error cargando usuarios:", error);
       setUsuarios([]);
@@ -28,12 +31,13 @@ const AdminUsuarios = () => {
   };
 
   useEffect(() => {
-    fetchUsuarios();
-  }, []);
+    fetchUsuarios(search, page);
+  }, [page]); // ✅ recargar cuando cambie la página
 
   const handleBuscar = (e) => {
     e.preventDefault();
-    fetchUsuarios(search);
+    setPage(1); // ✅ resetear a la primera página al buscar
+    fetchUsuarios(search, 1);
   };
 
   const handleBloquear = async (id, estado) => {
@@ -43,7 +47,7 @@ const AdminUsuarios = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-token": token // ✅ usar x-token
+          "x-token": token
         },
         body: JSON.stringify({ estado: !estado }),
       });
@@ -63,7 +67,7 @@ const AdminUsuarios = () => {
       await fetch(`http://localhost:3000/api/usuarios/${id}`, {
         method: "DELETE",
         headers: {
-          "x-token": token // ✅ usar x-token
+          "x-token": token
         }
       });
       setUsuarios((prev) => prev.filter((u) => u._id !== id));
@@ -78,7 +82,7 @@ const AdminUsuarios = () => {
         <Col xs={12} md={10} lg={8}>
           <h3 className="mb-4 text-center">Usuarios Registrados</h3>
 
-          {/* 🔍 Buscador responsive */}
+          {/* 🔍 Buscador */}
           <Form onSubmit={handleBuscar} className="mb-3 d-flex flex-column flex-md-row gap-2">
             <Form.Control
               type="text"
@@ -91,7 +95,7 @@ const AdminUsuarios = () => {
             </Button>
           </Form>
 
-          {/* 🧾 Tabla responsive */}
+          {/* 🧾 Tabla */}
           <div className="table-responsive">
             <Table striped bordered hover>
               <thead>
@@ -141,6 +145,19 @@ const AdminUsuarios = () => {
               </tbody>
             </Table>
           </div>
+
+          {/* 📄 Paginación */}
+          <Pagination className="justify-content-center mt-3">
+            {[...Array(totalPages)].map((_, i) => (
+              <Pagination.Item
+                key={i + 1}
+                active={i + 1 === page}
+                onClick={() => setPage(i + 1)}
+              >
+                {i + 1}
+              </Pagination.Item>
+            ))}
+          </Pagination>
         </Col>
       </Row>
     </Container>
@@ -148,4 +165,3 @@ const AdminUsuarios = () => {
 };
 
 export default AdminUsuarios;
-

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Table, Form, Row, Col, Button, Alert, Spinner } from "react-bootstrap";
+import { useEffect, useState, useMemo } from "react";
+import { Table, Form, Row, Col, Button, Alert, Spinner, Pagination } from "react-bootstrap";
 import { API_URL } from "../../services/api";
 
 const AdminCompras = () => {
@@ -7,35 +7,64 @@ const AdminCompras = () => {
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState(null);
   const [filtros, setFiltros] = useState({ estado: "", desde: "", hasta: "" });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const token = localStorage.getItem("token");
+  const limit = 10; // cantidad de órdenes por página
 
-  // Cargar órdenes con filtros
-  const fetchOrdenes = async () => {
+  const queryParamsBase = useMemo(() => {
+    const qp = new URLSearchParams();
+    if (filtros.estado) qp.append("estado", filtros.estado);
+    if (filtros.desde) qp.append("desde", filtros.desde);
+    if (filtros.hasta) qp.append("hasta", filtros.hasta);
+    qp.append("limit", limit);
+    return qp;
+  }, [filtros, limit]);
+
+  const fetchOrdenes = async (pagina = 1) => {
     try {
-      const queryParams = new URLSearchParams();
-      if (filtros.estado) queryParams.append("estado", filtros.estado);
-      if (filtros.desde) queryParams.append("desde", filtros.desde);
-      if (filtros.hasta) queryParams.append("hasta", filtros.hasta);
+      setLoading(true);
+      const qp = new URLSearchParams(queryParamsBase.toString());
+      qp.set("page", pagina);
 
-      const res = await fetch(`${API_URL}/api/ordenes/filtrar?${queryParams.toString()}`, {
+      const res = await fetch(`${API_URL}/api/ordenes/filtrar?${qp.toString()}`, {
         headers: { "x-token": token },
       });
-      if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
-      setOrdenes(Array.isArray(data) ? data : []);
+      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+
+      setOrdenes(Array.isArray(data.ordenes) ? data.ordenes : []);
+      setPage(data.page || pagina);
+      setTotalPages(data.totalPages || 1);
       setMensaje({ tipo: "success", texto: "Órdenes cargadas correctamente" });
     } catch (error) {
       setMensaje({ tipo: "danger", texto: "Error al cargar órdenes" });
+      setOrdenes([]);
+      setPage(1);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrdenes();
+    fetchOrdenes(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Refiltrar con cambios de filtros
+  const aplicarFiltros = () => {
+    setPage(1);
+    fetchOrdenes(1);
+  };
+
+  // Paginación UI
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages || p === page) return;
+    setPage(p);
+    fetchOrdenes(p);
+  };
 
   // Actualizar estado de envío
   const actualizarEnvio = async (id, nuevoEstado) => {
@@ -114,6 +143,41 @@ const AdminCompras = () => {
     );
   }
 
+  // Render de botones de paginación (compacto cuando hay muchas páginas)
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const items = [];
+    const maxButtons = 5;
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    if (end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+
+    items.push(
+      <Pagination.First key="first" onClick={() => goToPage(1)} disabled={page === 1} />,
+      <Pagination.Prev key="prev" onClick={() => goToPage(page - 1)} disabled={page === 1} />
+    );
+
+    if (start > 1) items.push(<Pagination.Ellipsis key="start-ellipsis" disabled />);
+
+    for (let p = start; p <= end; p++) {
+      items.push(
+        <Pagination.Item key={p} active={p === page} onClick={() => goToPage(p)}>
+          {p}
+        </Pagination.Item>
+      );
+    }
+
+    if (end < totalPages) items.push(<Pagination.Ellipsis key="end-ellipsis" disabled />);
+
+    items.push(
+      <Pagination.Next key="next" onClick={() => goToPage(page + 1)} disabled={page === totalPages} />,
+      <Pagination.Last key="last" onClick={() => goToPage(totalPages)} disabled={page === totalPages} />
+    );
+
+    return <Pagination className="mt-2">{items}</Pagination>;
+  };
+
   return (
     <div className="mt-3">
       <h3>Compras de Clientes</h3>
@@ -152,7 +216,7 @@ const AdminCompras = () => {
           />
         </Col>
         <Col xs={12} md={3}>
-          <Button variant="primary" className="w-100" onClick={fetchOrdenes}>
+          <Button variant="primary" className="w-100" onClick={aplicarFiltros}>
             Filtrar
           </Button>
         </Col>
@@ -237,11 +301,11 @@ const AdminCompras = () => {
           </tbody>
         </Table>
       </div>
+
+      {/* Paginación */}
+      {renderPagination()}
     </div>
   );
 };
 
 export default AdminCompras;
-
-
-

@@ -58,7 +58,7 @@ const ClientePage = () => {
             <div className="col-md-6">
               <p><strong>DNI:</strong> {usuario?.dni}</p>
               <p><strong>Teléfono:</strong> {usuario?.telefono}</p>
-              <p><strong>Correo:</strong> {usuario?.email}</p>
+              <p><strong>Correo:</strong> {usuario?.correo}</p> {/* 👈 corregido */}
             </div>
             <div className="col-md-6">
               <p><strong>Dirección:</strong> {usuario?.direccion}</p>
@@ -79,14 +79,17 @@ const ClientePage = () => {
           ) : (
             <div className="row">
               {misCompras.map((compra) => (
-                <div className="col-12 col-md-6 mb-3" key={compra._id}>
-                  <div className="card border-light shadow-sm h-100">
-                    <div className="card-body">
-                      <h5 className="card-title">
+                <div className="col-12 col-md-4 mb-2" key={compra._id}>
+                  <div
+                    className="card border-light shadow-sm h-100"
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    <div className="card-body p-2">
+                      <h6 className="card-title mb-1">
                         Fecha: {new Date(compra.fecha).toLocaleDateString()}
-                      </h5>
-                      <p><strong>Total:</strong> ${compra.total}</p>
-                      <p>
+                      </h6>
+                      <p className="mb-1"><strong>Total:</strong> ${compra.total}</p>
+                      <p className="mb-1">
                         <strong>Estado:</strong>{" "}
                         <span
                           className={`badge ${
@@ -104,16 +107,16 @@ const ClientePage = () => {
                       {/* Botón de pago solo si está pendiente */}
                       {compra.estado === "pendiente" && (
                         <button
-                          className="btn btn-primary btn-sm mb-3"
+                          className="btn btn-primary btn-sm mb-2"
                           onClick={() => iniciarPago(compra._id)}
                         >
-                          💳 Pagar ahora
+                          💳 Pagar
                         </button>
                       )}
 
                       <ul className="list-group list-group-flush">
                         {compra.productos.map((item, idx) => (
-                          <li key={idx} className="list-group-item">
+                          <li key={idx} className="list-group-item py-1 px-2">
                             {item.nombre} — {item.cantidad} x ${item.precio}
                             {item.talle && (
                               <span className="ms-2 text-muted">Talle: {item.talle}</span>
@@ -134,4 +137,3 @@ const ClientePage = () => {
 };
 
 export default ClientePage;
-
