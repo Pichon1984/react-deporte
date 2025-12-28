@@ -1,35 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Form, Spinner } from 'react-bootstrap';
+import { Table, Button, Form, Spinner, Pagination } from 'react-bootstrap';
 
 function AdminConsultas() {
   const [consultas, setConsultas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [respuesta, setRespuesta] = useState({});
+  const [page, setPage] = useState(1);          // ✅ página actual
+  const [totalPages, setTotalPages] = useState(1); // ✅ total de páginas
   const token = localStorage.getItem("token"); // ✅ obtener token desde localStorage
 
-  useEffect(() => {
-    const fetchConsultas = async () => {
-      try {
-        const res = await fetch('http://localhost:3000/api/consultas/todas', {
-          headers: { "x-token": token }
-        });
-        const data = await res.json();
+  const fetchConsultas = async (pageNumber = 1) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/consultas/todas?page=${pageNumber}&limit=10`, {
+        headers: { "x-token": token }
+      });
+      const data = await res.json();
 
-        if (Array.isArray(data)) {
-          setConsultas(data);
-        } else {
-          console.error("Respuesta inesperada:", data);
-          setConsultas([]);
-        }
-      } catch (error) {
-        console.error('Error cargando consultas:', error);
+      // ✅ backend debe devolver { consultas, totalPages, currentPage }
+      if (Array.isArray(data.consultas)) {
+        setConsultas(data.consultas);
+        setTotalPages(data.totalPages || 1);
+        setPage(data.currentPage || 1);
+      } else {
+        console.error("Respuesta inesperada:", data);
         setConsultas([]);
-      } finally {
-        setLoading(false);
       }
-    };
-    if (token) fetchConsultas();
-  }, [token]);
+    } catch (error) {
+      console.error('Error cargando consultas:', error);
+      setConsultas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchConsultas(page);
+  }, [token, page]);
 
   const handleResponder = async (consultaId) => {
     try {
@@ -59,7 +65,7 @@ function AdminConsultas() {
   return (
     <div className="mt-4">
       <h3>Consultas de usuarios</h3>
-      <div className="table-responsive"> {/* ✅ hace la tabla responsive */}
+      <div className="table-responsive">
         <Table striped bordered hover>
           <thead>
             <tr>
@@ -85,7 +91,7 @@ function AdminConsultas() {
                       <>
                         <Form.Control
                           type="text"
-                          className="w-100" // ✅ input ocupa todo el ancho en móviles
+                          className="w-100"
                           placeholder="Escribe respuesta..."
                           value={respuesta[c._id] || ''}
                           onChange={(e) =>
@@ -94,7 +100,7 @@ function AdminConsultas() {
                         />
                         <Button
                           size="sm"
-                          className="w-100 mt-2" // ✅ botón ocupa todo el ancho en móviles
+                          className="w-100 mt-2"
                           onClick={() => handleResponder(c._id)}
                         >
                           Responder
@@ -114,9 +120,21 @@ function AdminConsultas() {
           </tbody>
         </Table>
       </div>
+
+      {/* 📄 Paginación */}
+      <Pagination className="justify-content-center mt-3">
+        {[...Array(totalPages)].map((_, i) => (
+          <Pagination.Item
+            key={i + 1}
+            active={i + 1 === page}
+            onClick={() => setPage(i + 1)}
+          >
+            {i + 1}
+          </Pagination.Item>
+        ))}
+      </Pagination>
     </div>
   );
 }
 
 export default AdminConsultas;
-

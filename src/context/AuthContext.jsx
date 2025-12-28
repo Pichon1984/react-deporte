@@ -5,7 +5,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
-  const [token, setToken] = useState(null); // 👈 nuevo estado para token
+  const [token, setToken] = useState(null);
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
@@ -17,12 +17,15 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    setToken(storedToken); // 👈 guardamos token en estado
+    setToken(storedToken);
 
     const cargarUsuario = async () => {
       try {
-        const resp = await fetch("http://localhost:3000/api/auth/me", {
-          headers: { "x-token": storedToken }
+        const resp = await fetch("http://localhost:3000/api/usuarios/me", {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": storedToken // 👈 tu backend espera este header
+          }
         });
 
         if (resp.ok) {
@@ -31,7 +34,8 @@ export const AuthProvider = ({ children }) => {
           const usuarioData = {
             id: data._id || data.id,
             nombre: data.nombre,
-            email: data.correo,
+            apellido: data.apellido,
+            correo: data.correo, // 👈 mantenemos "correo" como en el backend
             rol: (data.rol || "").toUpperCase(),
             telefono: data.telefono,
             direccion: data.direccion,
@@ -60,12 +64,13 @@ export const AuthProvider = ({ children }) => {
   // 👉 Login: guardar token y usuario
   const logIn = (usuarioData, token) => {
     localStorage.setItem("token", token);
-    setToken(token); // 👈 guardamos token en estado
+    setToken(token);
 
     const usuarioNormalizado = {
       id: usuarioData._id || usuarioData.id,
       nombre: usuarioData.nombre,
-      email: usuarioData.correo,
+      apellido: usuarioData.apellido,
+      correo: usuarioData.correo,
       rol: (usuarioData.rol || "").toUpperCase(),
       telefono: usuarioData.telefono,
       direccion: usuarioData.direccion,
@@ -82,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   const logOut = () => {
     localStorage.removeItem("token");
     setUsuario(null);
-    setToken(null); // 👈 limpiamos token
+    setToken(null);
     navigate("/inicio", { replace: true });
   };
 
@@ -95,4 +100,3 @@ export const AuthProvider = ({ children }) => {
 
 // 👇 Hook personalizado
 export const useAuth = () => useContext(AuthContext);
-
