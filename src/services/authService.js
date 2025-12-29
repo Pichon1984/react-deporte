@@ -10,11 +10,10 @@ async function handleResponse(res) {
   }
 
   if (!res.ok) {
-    // devolver error claro
-    return { error: true, status: res.status, ...data };
+    return { ok: false, status: res.status, data };
   }
 
-  return data;
+  return { ok: true, status: res.status, data };
 }
 
 const headers = { "Content-Type": "application/json" };
@@ -39,10 +38,10 @@ export async function login(correo, password) {
   return handleResponse(res);
 }
 
-// Perfil del usuario logueado
+// Perfil del usuario logueado (usando x-token)
 export async function getProfile(token) {
   const res = await fetch(`${API_URL}/api/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { "x-token": token },
   });
   return handleResponse(res);
 }
@@ -54,13 +53,7 @@ export async function forgotPassword(email) {
     headers,
     body: JSON.stringify({ correo: email }),
   });
-
-  const data = await handleResponse(res);
-  // ⚠️ Solo loguear en desarrollo
-  if (import.meta.env.DEV) {
-    console.log("🔍 Respuesta forgotPassword:", data);
-  }
-  return data;
+  return handleResponse(res);
 }
 
 // Reset password
