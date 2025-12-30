@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import emailjs from "@emailjs/browser";
 import { forgotPassword } from "../services/authService";
 import "../styles/ForgotPasswordPage.css";
@@ -9,6 +9,11 @@ const ForgotPasswordPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Inicializar EmailJS con la public key
+  useEffect(() => {
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,10 +23,8 @@ const ForgotPasswordPage = () => {
     try {
       // 👉 Llamada al backend
       const resp = await forgotPassword(email);
-
       console.log("🔍 Respuesta backend forgotPassword:", resp);
 
-      // 👉 El backend debería devolverte { msg, link } o { msg, token }
       if (resp && resp.link) {
         // 👉 Usar el link armado en backend (con FRONTEND_URL)
         const result = await emailjs.send(
@@ -29,15 +32,13 @@ const ForgotPasswordPage = () => {
           import.meta.env.VITE_EMAILJS_TEMPLATE_ID_RESET,
           {
             to_email: email,
-            recovery_link: resp.link, // 👈 ya viene listo
-          },
-          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+            recovery_link: resp.link,
+          }
         );
 
         console.log("📧 Resultado envío EmailJS:", result);
         setMensaje("Correo de recuperación enviado correctamente ✅");
       } else {
-        // Si el backend no devolvió link, mostrar error más claro
         setError(
           resp?.msg ||
             "No se pudo generar el enlace de recuperación. Revisa tu configuración."

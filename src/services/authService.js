@@ -50,18 +50,27 @@ export async function getProfile(token) {
 export async function forgotPassword(email) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ correo: email }),
   });
-  return handleResponse(res);
+  return res.json(); // 👈 importante
 }
+
+
 
 // Reset password
 export async function resetPassword(token, newPassword) {
-  const res = await fetch(`${API_URL}/api/auth/reset-password`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ token, newPassword }),
-  });
-  return handleResponse(res);
+  console.log("📤 Enviando a resetPassword:", { token, newPassword });
+  try {
+    const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ token, newPassword }), // 👈 ahora coincide con backend
+    });
+    return handleResponse(res);
+  } catch (error) {
+    console.error("❌ Error en resetPassword:", error);
+    throw error;
+  }
 }
+

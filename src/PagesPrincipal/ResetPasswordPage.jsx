@@ -50,17 +50,18 @@ const ResetPasswordPage = () => {
     try {
       const resp = await resetPassword(token, newPassword);
 
-      if (resp?.msg) {
-        setMensaje(resp.msg);
+      if (resp.ok) {
+        setMensaje(resp.data.msg); // "Contraseña actualizada correctamente"
 
-        // Redirigir al login después de 2 segundos
         setTimeout(() => {
-          navigate("/Cuenta"); // 👈 asegúrate que exista esta ruta en tu App.jsx
+          navigate("/Cuenta"); // 👈 usa la ruta real de tu login
         }, 2000);
       } else {
-        setError("No se pudo actualizar la contraseña.");
+        setError(resp.data?.msg || "No se pudo actualizar la contraseña.");
       }
-    } catch {
+
+    } catch (err) {
+      console.error("❌ Error en ResetPasswordPage:", err);
       setError("Error de conexión con el servidor.");
     } finally {
       setLoading(false);
@@ -90,7 +91,10 @@ const ResetPasswordPage = () => {
                   />
                   <ul className="mt-2 list-unstyled">
                     {reglasPassword.map((r, i) => (
-                      <li key={i} style={{ color: r.test(newPassword) ? "green" : "red" }}>
+                      <li
+                        key={i}
+                        style={{ color: r.test(newPassword) ? "green" : "red" }}
+                      >
                         {r.test(newPassword) ? "✔" : "✘"} {r.msg}
                       </li>
                     ))}

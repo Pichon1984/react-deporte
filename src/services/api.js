@@ -17,7 +17,6 @@ async function handleResponse(res) {
   return { ok: true, status: res.status, data };
 }
 
-// 🔹 Helper para headers dinámicos con x-token
 function getHeaders(token) {
   return {
     "Content-Type": "application/json",
@@ -106,3 +105,6 @@ export async function removeFromCarrito(token, productoId) {
   });
   return handleResponse(res);
 }
+
+// 🔹 Exporta la constante para que AdminCompras.jsx pueda usarla
+export { API_URL };
