@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { fetchConToken } from "../helpers/fetchConToken";
 import { useNavigate } from "react-router-dom";
 
 const ClientePage = () => {
@@ -17,14 +16,23 @@ const ClientePage = () => {
 
     const cargarCompras = async () => {
       try {
-        const resp = await fetchConToken("http://localhost:3000/api/compras/mias");
-        if (resp.ok) {
-          const data = await resp.json();
-          setMisCompras(data);
+        const token = localStorage.getItem("token"); // 👈 guardado en login
+        const resp = await fetch("http://localhost:3000/api/compras/mias", {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": token, // 👈 coincide con tu validarJWT
+          },
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.ok) {
+          setMisCompras(data.compras || []);
         } else {
           setMisCompras([]);
         }
-      } catch {
+      } catch (error) {
+        console.error("Error cargando compras:", error);
         setMisCompras([]);
       }
     };
@@ -34,13 +42,24 @@ const ClientePage = () => {
 
   const iniciarPago = async (compraId) => {
     try {
-      const resp = await fetchConToken(`http://localhost:3000/api/pagos/${compraId}`);
+      const token = localStorage.getItem("token");
+      const resp = await fetch(`http://localhost:3000/api/pagos/${compraId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-token": token,
+        },
+      });
+
       const data = await resp.json();
-      if (data.init_point) {
+
+      if (resp.ok && data.init_point) {
         window.location.href = data.init_point; // redirige al checkout de MercadoPago
+      } else {
+        alert("No se pudo iniciar el pago");
       }
     } catch (error) {
       console.error("Error iniciando pago:", error);
+      alert("Error iniciando pago");
     }
   };
 
@@ -58,7 +77,7 @@ const ClientePage = () => {
             <div className="col-md-6">
               <p><strong>DNI:</strong> {usuario?.dni}</p>
               <p><strong>Teléfono:</strong> {usuario?.telefono}</p>
-              <p><strong>Correo:</strong> {usuario?.correo}</p> {/* 👈 corregido */}
+              <p><strong>Correo:</strong> {usuario?.correo}</p>
             </div>
             <div className="col-md-6">
               <p><strong>Dirección:</strong> {usuario?.direccion}</p>
@@ -80,10 +99,7 @@ const ClientePage = () => {
             <div className="row">
               {misCompras.map((compra) => (
                 <div className="col-12 col-md-4 mb-2" key={compra._id}>
-                  <div
-                    className="card border-light shadow-sm h-100"
-                    style={{ fontSize: "0.9rem" }}
-                  >
+                  <div className="card border-light shadow-sm h-100" style={{ fontSize: "0.9rem" }}>
                     <div className="card-body p-2">
                       <h6 className="card-title mb-1">
                         Fecha: {new Date(compra.fecha).toLocaleDateString()}
@@ -137,3 +153,5 @@ const ClientePage = () => {
 };
 
 export default ClientePage;
+
+

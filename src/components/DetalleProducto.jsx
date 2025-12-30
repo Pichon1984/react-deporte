@@ -1,5 +1,16 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Accordion } from 'react-bootstrap';
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Accordion,
+  Toast,
+  ToastContainer,
+  Alert,
+  Badge
+} from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { CarritoContext } from '../context/CarritoContext';
 import ListaConsultas from '../components/ListaConsultas';
@@ -24,7 +35,6 @@ function DetalleProducto() {
   const [expandido, setExpandido] = useState(false);
   const limiteDescripcion = 250;
 
-  // trigger para refrescar consultas
   const [refreshConsultas, setRefreshConsultas] = useState(false);
 
   // Cargar producto
@@ -41,7 +51,7 @@ function DetalleProducto() {
     if (id) fetchProducto();
   }, [id]);
 
-  // Cuotas reales de MercadoPago
+  // Cuotas MercadoPago
   useEffect(() => {
     const fetchCuotas = async () => {
       try {
@@ -67,7 +77,7 @@ function DetalleProducto() {
     if (producto?.precio) fetchCuotas();
   }, [producto]);
 
-  // Cotización de envío con Andreani
+  // Envío Andreani
   useEffect(() => {
     const fetchEnvioAndreani = async () => {
       try {
@@ -137,7 +147,7 @@ function DetalleProducto() {
       if (data.ok) {
         alert('Consulta enviada correctamente');
         setMensajeConsulta('');
-        setRefreshConsultas((prev) => !prev); // ✅ refresca ListaConsultas
+        setRefreshConsultas((prev) => !prev);
       } else {
         alert('Error al enviar consulta');
       }
@@ -177,19 +187,80 @@ function DetalleProducto() {
             )}
           </div>
 
-          <h4 className="text-success mt-3">${producto.precio}</h4>
+          <h4 className="text-success mt-3 d-flex align-items-center gap-2">
+            ${producto.precio}
+            {(producto.stock || 0) === 0 && <Badge bg="secondary">Sin stock</Badge>}
+          </h4>
 
-          {/* ... talles, cantidad, envío, cuotas ... */}
+          {(producto.stock || 0) === 0 && (
+            <Alert variant="warning" className="mt-2 mb-0">
+              Sin stock por el momento. Podés dejar una consulta y te avisamos cuando haya disponibilidad.
+            </Alert>
+          )}
 
-          <Button
-            variant="primary"
-            onClick={handleAgregar}
-            disabled={(producto.stock || 0) === 0}
-            className="mt-3"
-          >
-            Agregar al carrito
-          </Button>
+          {/* Talles en cuadrados */}
+          {producto.talles?.length > 0 && (
+            <div className="mt-3">
+              <h5>Talles disponibles</h5>
+              <div className="d-flex flex-wrap gap-2">
+                {producto.talles.map((talle, idx) => (
+                  <Button
+                    key={idx}
+                    variant={talleSeleccionado === talle ? 'primary' : 'outline-secondary'}
+                    onClick={() => setTalleSeleccionado(talle)}
+                    style={{ minWidth: '60px' }}
+                    disabled={(producto.stock || 0) === 0}
+                  >
+                    {talle}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
 
+          {/* Cantidad */}
+          <div className="mt-3">
+            <h5>Cantidad</h5>
+            <Form.Control
+              type="number"
+              min={1}
+              max={producto.stock || 1}
+              value={cantidad}
+              onChange={(e) => setCantidad(Number(e.target.value))}
+              disabled={(producto.stock || 0) === 0}
+            />
+            <small className="text-muted">Stock disponible: {producto.stock || 0}</small>
+          </div>
+
+          {/* Métodos de envío con descripción y costo */}
+          {producto.envio?.metodos?.length > 0 && (
+            <div className="mt-3">
+              <h5>Métodos de envío</h5>
+              {producto.envio.metodos.map((metodo, idx) => (
+                <Form.Check
+                  key={idx}
+                  type="radio"
+                  name="envio"
+                  label={`${metodo.nombre} - ${metodo.descripcion} ($${metodo.costo})`}
+                  value={metodo.nombre}
+                  checked={envioSeleccionado === metodo.nombre}
+                  onChange={(e) => setEnvioSeleccionado(e.target.value)}
+                  disabled={(producto.stock || 0) === 0}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Envío Andreani (cotización) */}
+          {envioAndreani && (
+            <div className="mt-3">
+              <h5>Envío con Andreani</h5>
+              <p>Costo estimado: ${envioAndreani.costo}</p>
+              <p>Tiempo estimado: {envioAndreani.tiempo} días</p>
+            </div>
+          )}
+
+          {/* Cuotas MercadoPago */}
           <div className="mt-3">
             <h5>Cuotas con MercadoPago</h5>
             {cuotasMP.length > 0 ? (
@@ -207,6 +278,7 @@ function DetalleProducto() {
                           name={`cuotas-${grupo.metodo}`}
                           label={c.recommended_message}
                           value={c.installments}
+                          disabled={(producto.stock || 0) === 0}
                         />
                       ))}
                     </Accordion.Body>
@@ -217,10 +289,19 @@ function DetalleProducto() {
               <p className="text-muted">Financiación disponible al pagar con MercadoPago</p>
             )}
           </div>
+
+          <Button
+            variant="primary"
+            onClick={handleAgregar}
+            disabled={(producto.stock || 0) === 0}
+            className="mt-3"
+          >
+            Agregar al carrito
+          </Button>
         </Col>
       </Row>
 
-      {/* ✅ Consultas */}
+      {/* Consultas */}
       <Row className="mt-4">
         <Col xs={12}>
           <h5>Consultas de otros clientes</h5>
@@ -240,8 +321,26 @@ function DetalleProducto() {
           </Button>
         </Col>
       </Row>
+
+      {/* Toast de confirmación */}
+      <ToastContainer position="bottom-end" className="p-3">
+        <Toast
+          bg="success"
+          show={mostrarToast}
+          onClose={() => setMostrarToast(false)}
+          delay={3000}
+          autohide
+        >
+          <Toast.Header>
+            <strong className="me-auto">Carrito</strong>
+            <small>Ahora</small>
+          </Toast.Header>
+          <Toast.Body>✅ Producto agregado al carrito</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </Container>
   );
 }
 
 export default DetalleProducto;
+
