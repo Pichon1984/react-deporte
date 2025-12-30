@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Form, Button, Pagination } from "react-bootstrap";
+import { Container, Row, Col, Table, Form, Button, Pagination, ListGroup, Tabs, Tab } from "react-bootstrap";
 
 const AdminUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1); // ✅ página actual
-  const [totalPages, setTotalPages] = useState(1); // ✅ total de páginas
+  const [sugerencias, setSugerencias] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [tab, setTab] = useState("activos"); // solapa actual
 
   const fetchUsuarios = async (searchTerm = "", pageNumber = 1) => {
     try {
@@ -23,7 +25,7 @@ const AdminUsuarios = () => {
 
       const data = await res.json();
       setUsuarios(data.usuarios || []);
-      setTotalPages(data.totalPages || 1); // ✅ backend debe devolver totalPages
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("Error cargando usuarios:", error);
       setUsuarios([]);
@@ -32,12 +34,37 @@ const AdminUsuarios = () => {
 
   useEffect(() => {
     fetchUsuarios(search, page);
-  }, [page]); // ✅ recargar cuando cambie la página
+  }, [page]);
 
-  const handleBuscar = (e) => {
-    e.preventDefault();
-    setPage(1); // ✅ resetear a la primera página al buscar
-    fetchUsuarios(search, 1);
+  // 🔍 Autocomplete en vivo
+  const handleChange = async (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (value.length > 1) {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `http://localhost:3000/api/usuarios?search=${encodeURIComponent(value)}&limit=5`,
+          { headers: { "x-token": token } }
+        );
+        const data = await res.json();
+        setSugerencias(data.usuarios || []);
+      } catch (error) {
+        console.error("Error buscando sugerencias:", error);
+        setSugerencias([]);
+      }
+    } else {
+      // 🔄 si se borra la búsqueda, mostrar todos
+      setSugerencias([]);
+      fetchUsuarios("", 1);
+    }
+  };
+
+  const handleSelectSugerencia = (cliente) => {
+    setSearch(cliente.correo);
+    setSugerencias([]);
+    setUsuarios([cliente]); // mostrar solo ese cliente
   };
 
   const handleBloquear = async (id, estado) => {
@@ -53,7 +80,7 @@ const AdminUsuarios = () => {
       });
       const data = await res.json();
       setUsuarios((prev) =>
-        prev.map((u) => (u._id === id ? data.usuario : u))
+        prev.map((u) => (u._id === id ? { ...u, ...data.usuario } : u))
       );
     } catch (error) {
       console.error("Error bloqueando usuario:", error);
@@ -66,9 +93,7 @@ const AdminUsuarios = () => {
       const token = localStorage.getItem("token");
       await fetch(`http://localhost:3000/api/usuarios/${id}`, {
         method: "DELETE",
-        headers: {
-          "x-token": token
-        }
+        headers: { "x-token": token }
       });
       setUsuarios((prev) => prev.filter((u) => u._id !== id));
     } catch (error) {
@@ -76,28 +101,49 @@ const AdminUsuarios = () => {
     }
   };
 
+  // Filtrar según solapa
+  const usuariosFiltrados = usuarios.filter((u) =>
+    tab === "activos" ? u.estado === true : u.estado === false
+  );
+
   return (
     <Container fluid className="py-4">
       <Row className="justify-content-center">
         <Col xs={12} md={10} lg={8}>
           <h3 className="mb-4 text-center">Usuarios Registrados</h3>
 
-          {/* 🔍 Buscador */}
-          <Form onSubmit={handleBuscar} className="mb-3 d-flex flex-column flex-md-row gap-2">
+          {/* 🔍 Buscador con autocomplete */}
+          <Form className="mb-3">
             <Form.Control
               type="text"
               placeholder="Buscar por nombre, apellido o correo"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleChange}
             />
-            <Button type="submit" variant="primary" className="w-100 w-md-auto">
-              Buscar
-            </Button>
+            {sugerencias.length > 0 && (
+              <ListGroup className="mt-2">
+                {sugerencias.map((u) => (
+                  <ListGroup.Item
+                    key={u._id}
+                    action
+                    onClick={() => handleSelectSugerencia(u)}
+                  >
+                    {u.nombre} {u.apellido} - {u.correo}
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            )}
           </Form>
+
+          {/* 🗂 Tabs Activos/Bloqueados */}
+          <Tabs activeKey={tab} onSelect={(k) => setTab(k)} className="mb-3">
+            <Tab eventKey="activos" title="Activos" />
+            <Tab eventKey="bloqueados" title="Bloqueados" />
+          </Tabs>
 
           {/* 🧾 Tabla */}
           <div className="table-responsive">
-            <Table striped bordered hover>
+            <Table striped bordered>
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -109,14 +155,14 @@ const AdminUsuarios = () => {
                 </tr>
               </thead>
               <tbody>
-                {usuarios.length > 0 ? (
-                  usuarios.map((u) => (
+                {usuariosFiltrados.length > 0 ? (
+                  usuariosFiltrados.map((u) => (
                     <tr key={u._id}>
-                      <td>{u.nombre}</td>
-                      <td>{u.apellido}</td>
-                      <td>{u.correo}</td>
-                      <td>{u.rol}</td>
-                      <td>{u.estado ? "Activo" : "Inhabilitado"}</td>
+                      <td>{u?.nombre ?? "Sin nombre"}</td>
+                      <td>{u?.apellido ?? "Sin apellido"}</td>
+                      <td>{u?.correo ?? "Sin correo"}</td>
+                      <td>{u?.rol ?? "Sin rol"}</td>
+                      <td>{u?.estado ? "Activo" : "Inhabilitado"}</td>
                       <td className="d-flex flex-column flex-md-row gap-2">
                         <Button
                           variant={u.estado ? "warning" : "success"}
@@ -165,3 +211,5 @@ const AdminUsuarios = () => {
 };
 
 export default AdminUsuarios;
+
+

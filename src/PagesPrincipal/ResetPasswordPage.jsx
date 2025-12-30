@@ -1,49 +1,68 @@
-import { useState } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { resetPassword } from "../services/authService"; // 👈 usamos el servicio centralizado
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { resetPassword } from "../services/authService";
 import "../styles/ResetPasswordPage.css";
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const navigate = useNavigate();
 
-  const token = searchParams.get("token"); // 👈 viene del link enviado por email
-  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mensaje, setMensaje] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!token) {
+      setError("Token inválido o faltante en la URL.");
+    }
+  }, [token]);
+
+  // 👉 Reglas de validación de contraseña
+  const reglasPassword = [
+    { test: (p) => p.length >= 8, msg: "Mínimo 8 caracteres" },
+    { test: (p) => /[A-Z]/.test(p), msg: "Al menos una mayúscula" },
+    { test: (p) => /\d/.test(p), msg: "Al menos un número" },
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
     setLoading(true);
     setError(null);
     setMensaje(null);
 
-    try {
-      const resp = await resetPassword(token, password);
+    // Validar reglas
+    const cumpleTodas = reglasPassword.every((r) => r.test(newPassword));
+    if (!cumpleTodas) {
+      setError("La contraseña no cumple las reglas de seguridad.");
+      setLoading(false);
+      return;
+    }
 
-      if (resp.msg) {
-        setMensaje(resp.msg);
-        // Redirigir al login después de unos segundos
-        setTimeout(() => navigate("/login"), 3000);
+    if (newPassword !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const resp = await resetPassword(token, newPassword);
+
+      if (resp.ok) {
+        setMensaje(resp.data.msg); // "Contraseña actualizada correctamente"
+
+        setTimeout(() => {
+          navigate("/Cuenta"); // 👈 usa la ruta real de tu login
+        }, 2000);
       } else {
-        setError("Error al restablecer la contraseña");
+        setError(resp.data?.msg || "No se pudo actualizar la contraseña.");
       }
+
     } catch (err) {
-      console.error(err);
-      setError("Error de conexión con el servidor");
+      console.error("❌ Error en ResetPasswordPage:", err);
+      setError("Error de conexión con el servidor.");
     } finally {
       setLoading(false);
     }
@@ -57,8 +76,8 @@ const ResetPasswordPage = () => {
             <div className="card shadow-sm p-4">
               <h2 className="text-center mb-4">Restablecer contraseña</h2>
 
-              {mensaje && <div className="alert alert-success">{mensaje}</div>}
-              {error && <div className="alert alert-danger">{error}</div>}
+              {mensaje && <div className="alert success">{mensaje}</div>}
+              {error && <div className="alert error">{error}</div>}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
@@ -66,10 +85,20 @@ const ResetPasswordPage = () => {
                   <input
                     type="password"
                     className="form-control"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     required
                   />
+                  <ul className="mt-2 list-unstyled">
+                    {reglasPassword.map((r, i) => (
+                      <li
+                        key={i}
+                        style={{ color: r.test(newPassword) ? "green" : "red" }}
+                      >
+                        {r.test(newPassword) ? "✔" : "✘"} {r.msg}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Confirmar contraseña</label>
@@ -84,17 +113,11 @@ const ResetPasswordPage = () => {
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
-                  disabled={loading}
+                  disabled={loading || !token}
                 >
-                  {loading ? "Guardando..." : "Guardar nueva contraseña"}
+                  {loading ? "Actualizando..." : "Actualizar contraseña"}
                 </button>
               </form>
-
-              <div className="text-center mt-3">
-                <Link to="/login" className="text-decoration-none">
-                  Volver al login
-                </Link>
-              </div>
             </div>
           </div>
         </div>
@@ -104,4 +127,3 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
-

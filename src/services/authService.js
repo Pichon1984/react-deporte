@@ -2,19 +2,27 @@ import { API_URL } from "../services/api";
 
 // Helper para manejar respuestas
 async function handleResponse(res) {
+  let data;
   try {
-    const data = await res.json();
-    return data;
+    data = await res.json();
   } catch {
-    return { msg: "Respuesta inválida del servidor", status: res.status };
+    data = { msg: "Respuesta inválida del servidor" };
   }
+
+  if (!res.ok) {
+    return { ok: false, status: res.status, data };
+  }
+
+  return { ok: true, status: res.status, data };
 }
+
+const headers = { "Content-Type": "application/json" };
 
 // Registro de usuario
 export async function register(datos) {
   const res = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(datos),
   });
   return handleResponse(res);
@@ -24,36 +32,45 @@ export async function register(datos) {
 export async function login(correo, password) {
   const res = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ correo, password }),
   });
   return handleResponse(res);
 }
 
-// Perfil del usuario logueado
+// Perfil del usuario logueado (usando x-token)
 export async function getProfile(token) {
   const res = await fetch(`${API_URL}/api/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { "x-token": token },
   });
   return handleResponse(res);
 }
 
 // Forgot password
-export async function forgotPassword(correo) {
+export async function forgotPassword(email) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ correo }),
+    body: JSON.stringify({ correo: email }),
   });
-  return handleResponse(res);
+  return res.json(); // 👈 importante
 }
+
+
 
 // Reset password
 export async function resetPassword(token, newPassword) {
-  const res = await fetch(`${API_URL}/api/auth/reset-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, newPassword }),
-  });
-  return handleResponse(res);
+  console.log("📤 Enviando a resetPassword:", { token, newPassword });
+  try {
+    const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ token, newPassword }), // 👈 ahora coincide con backend
+    });
+    return handleResponse(res);
+  } catch (error) {
+    console.error("❌ Error en resetPassword:", error);
+    throw error;
+  }
 }
+

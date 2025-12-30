@@ -18,7 +18,19 @@ const Registro = () => {
     codigoPostal: "",
     dni: ""
   });
+
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  // 👉 Validaciones frontend
+  const validarCorreo = (correo) => /^\S+@\S+\.\S+$/.test(correo);
+
+  // Reglas de contraseña
+  const reglasPassword = [
+    { test: (p) => p.length >= 8, msg: "Mínimo 8 caracteres" },
+    { test: (p) => /[A-Z]/.test(p), msg: "Al menos una mayúscula" },
+    { test: (p) => /\d/.test(p), msg: "Al menos un número" },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,6 +39,17 @@ const Registro = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!validarCorreo(form.correo)) {
+      return setError("Formato de correo inválido");
+    }
+
+    const cumpleTodas = reglasPassword.every((r) => r.test(form.password));
+    if (!cumpleTodas) {
+      return setError("La contraseña no cumple las reglas de seguridad");
+    }
 
     try {
       const resp = await fetch("http://localhost:3000/api/auth/register", {
@@ -41,21 +64,21 @@ const Registro = () => {
         return setError(data.msg || "Error en registro");
       }
 
-      // ✅ Usar directamente el objeto que devuelve el backend
       const usuario = data.usuario;
-
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
-
       logIn(usuario, data.token);
 
-      if ((usuario.rol || "").toUpperCase() === "ADMIN") {
-        navigate("/admin");
-      } else {
-        navigate("/cliente");
-      }
-    } catch (error) {
-      console.error(error);
+      setSuccess("Registro exitoso ✅");
+
+      setTimeout(() => {
+        if ((usuario.rol || "").toUpperCase() === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/cliente");
+        }
+      }, 2000);
+    } catch {
       setError("Error en el servidor");
     }
   };
@@ -65,6 +88,7 @@ const Registro = () => {
       <div className="card shadow-lg p-4" style={{ maxWidth: "600px", width: "100%" }}>
         <h2 className="text-center mb-4">Registro</h2>
         <form onSubmit={handleSubmit} className="row g-3">
+          {/* Campos básicos */}
           <div className="col-md-6">
             <label htmlFor="nombre" className="form-label">Nombre</label>
             <input type="text" className="form-control" id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
@@ -80,7 +104,16 @@ const Registro = () => {
           <div className="col-md-6">
             <label htmlFor="password" className="form-label">Contraseña</label>
             <input type="password" className="form-control" id="password" name="password" value={form.password} onChange={handleChange} required />
+            <ul className="mt-2 list-unstyled">
+              {reglasPassword.map((r, i) => (
+                <li key={i} style={{ color: r.test(form.password) ? "green" : "red" }}>
+                  {r.test(form.password) ? "✔" : "✘"} {r.msg}
+                </li>
+              ))}
+            </ul>
           </div>
+
+          {/* Otros campos */}
           <div className="col-md-6">
             <label htmlFor="telefono" className="form-label">Teléfono</label>
             <input type="text" className="form-control" id="telefono" name="telefono" value={form.telefono} onChange={handleChange} />
@@ -107,6 +140,7 @@ const Registro = () => {
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
 
           <div className="d-grid mt-3">
             <button type="submit" className="btn btn-primary rounded-pill">Registrarme</button>
@@ -118,8 +152,3 @@ const Registro = () => {
 };
 
 export default Registro;
-
-
-
-
-
