@@ -74,3 +74,9 @@ export async function resetPassword(token, newPassword) {
   }
 }
 
+export const ComprasService = {
+  getById: async (id) => {
+    if (!id) throw new Error("El ID de la compra es requerido");
+    return httpGet(`/api/compras/${encodeURIComponent(id)}`);
+  },
+};

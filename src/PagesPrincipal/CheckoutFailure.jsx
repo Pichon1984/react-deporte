@@ -4,10 +4,13 @@ export function CheckoutFailure() {
   const { id } = useParams();
 
   return (
-    <div>
+    <div className="checkout-failure">
       <h2>❌ Pago rechazado</h2>
-      <p>Orden ID: {id}</p>
-      <p>Tu pago no pudo completarse. Intenta nuevamente.</p>
+      <p><strong>Orden ID:</strong> {id}</p>
+      <p>
+        Tu pago no pudo completarse. Intenta nuevamente o prueba con otro medio
+        de pago.
+      </p>
     </div>
   );
 }

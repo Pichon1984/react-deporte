@@ -1,17 +1,16 @@
 import { useEffect, useState, useMemo } from "react";
 import { Table, Form, Row, Col, Button, Alert, Spinner, Pagination } from "react-bootstrap";
-import { API_URL } from "../../services/api";
+import { ComprasService } from "../../services/compras";
 
 const AdminCompras = () => {
-  const [ordenes, setOrdenes] = useState([]);
+  const [compras, setCompras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState(null);
   const [filtros, setFiltros] = useState({ estado: "", desde: "", hasta: "" });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const token = localStorage.getItem("token");
-  const limit = 10; // cantidad de órdenes por página
+  const limit = 10; // cantidad de compras por página
 
   const queryParamsBase = useMemo(() => {
     const qp = new URLSearchParams();
@@ -22,25 +21,20 @@ const AdminCompras = () => {
     return qp;
   }, [filtros, limit]);
 
-  const fetchOrdenes = async (pagina = 1) => {
+  const fetchCompras = async (pagina = 1) => {
     try {
       setLoading(true);
       const qp = new URLSearchParams(queryParamsBase.toString());
       qp.set("page", pagina);
 
-      const res = await fetch(`${API_URL}/api/ordenes/filtrar?${qp.toString()}`, {
-        headers: { "x-token": token },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
-
-      setOrdenes(Array.isArray(data.ordenes) ? data.ordenes : []);
+      const data = await ComprasService.list(); // ✅ usamos el servicio
+      setCompras(Array.isArray(data.compras) ? data.compras : []);
       setPage(data.page || pagina);
       setTotalPages(data.totalPages || 1);
-      setMensaje({ tipo: "success", texto: "Órdenes cargadas correctamente" });
+      setMensaje({ tipo: "success", texto: "Compras cargadas correctamente" });
     } catch (error) {
-      setMensaje({ tipo: "danger", texto: "Error al cargar órdenes" });
-      setOrdenes([]);
+      setMensaje({ tipo: "danger", texto: "Error al cargar compras" });
+      setCompras([]);
       setPage(1);
       setTotalPages(1);
     } finally {
@@ -49,101 +43,47 @@ const AdminCompras = () => {
   };
 
   useEffect(() => {
-    fetchOrdenes(1);
+    fetchCompras(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refiltrar con cambios de filtros
   const aplicarFiltros = () => {
     setPage(1);
-    fetchOrdenes(1);
+    fetchCompras(1);
   };
 
-  // Paginación UI
   const goToPage = (p) => {
     if (p < 1 || p > totalPages || p === page) return;
     setPage(p);
-    fetchOrdenes(p);
+    fetchCompras(p);
   };
 
-  // Actualizar estado de envío
-  const actualizarEnvio = async (id, nuevoEstado) => {
+  // ✅ Confirmar pago usando ComprasService
+  const confirmarPago = async (id) => {
     try {
-      const res = await fetch(`${API_URL}/api/ordenes/${id}/envio`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": token,
-        },
-        body: JSON.stringify({ estadoEnvio: nuevoEstado }),
+      const updated = await ComprasService.confirmarPago(id);
+      setCompras((prev) => prev.map((c) => (c._id === id ? updated.compra : c)));
+      setMensaje({ tipo: "success", texto: "Pago confirmado y stock actualizado" });
+    } catch (error) {
+      setMensaje({ tipo: "danger", texto: "Error al confirmar pago" });
+    }
+  };
+
+  // ✅ Guardar envío usando ComprasService
+  const guardarEnvio = async (compra) => {
+    try {
+      const updated = await ComprasService.actualizarEnvio(compra._id, {
+        estadoEnvio: compra.estadoEnvio,
+        trackingNumber: compra.trackingNumber || "",
+        courier: compra.courier || "",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Error actualizando envío");
-      if (data.ok) {
-        setOrdenes((prev) =>
-          prev.map((o) => (o._id === id ? { ...o, estadoEnvio: nuevoEstado } : o))
-        );
-        setMensaje({ tipo: "success", texto: "Estado de envío actualizado" });
-      }
+      setCompras((prev) => prev.map((c) => (c._id === compra._id ? updated.compra : c)));
+      setMensaje({ tipo: "success", texto: "Estado de envío actualizado" });
     } catch (error) {
       setMensaje({ tipo: "danger", texto: "Error al actualizar estado de envío" });
     }
   };
 
-  // Actualizar estado de pago
-  const actualizarPago = async (id, nuevoEstado) => {
-    try {
-      const res = await fetch(`${API_URL}/api/ordenes/${id}/pago`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": token,
-        },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Error actualizando pago");
-      if (data.ok) {
-        setOrdenes((prev) =>
-          prev.map((o) => (o._id === id ? { ...o, estado: nuevoEstado } : o))
-        );
-        setMensaje({ tipo: "success", texto: "Estado de pago actualizado" });
-      }
-    } catch (error) {
-      setMensaje({ tipo: "danger", texto: "Error al actualizar estado de pago" });
-    }
-  };
-
-  // Cancelar orden
-  const cancelarOrden = async (id) => {
-    if (!window.confirm("¿Cancelar esta orden?")) return;
-    try {
-      const res = await fetch(`${API_URL}/api/ordenes/${id}`, {
-        method: "DELETE",
-        headers: { "x-token": token },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Error cancelando orden");
-      if (data.ok) {
-        setOrdenes((prev) =>
-          prev.map((o) => (o._id === id ? { ...o, estado: "cancelado" } : o))
-        );
-        setMensaje({ tipo: "success", texto: "Orden cancelada correctamente" });
-      }
-    } catch (error) {
-      setMensaje({ tipo: "danger", texto: "Error al cancelar orden" });
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center py-4">
-        <Spinner animation="border" />
-      </div>
-    );
-  }
-
-  // Render de botones de paginación (compacto cuando hay muchas páginas)
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -178,9 +118,17 @@ const AdminCompras = () => {
     return <Pagination className="mt-2">{items}</Pagination>;
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center py-4">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-3">
-      <h3>Compras de Clientes</h3>
+      <h3>Compras de clientes</h3>
 
       {mensaje && (
         <Alert variant={mensaje.tipo} onClose={() => setMensaje(null)} dismissible>
@@ -197,8 +145,10 @@ const AdminCompras = () => {
           >
             <option value="">Estado de pago</option>
             <option value="pendiente">Pendiente</option>
-            <option value="pagado">Pagado</option>
-            <option value="cancelado">Cancelado</option>
+            <option value="pagada">Pagada</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="fallida">Fallida</option>
+            <option value="reembolsada">Reembolsada</option>
           </Form.Select>
         </Col>
         <Col xs={12} md={3}>
@@ -229,26 +179,24 @@ const AdminCompras = () => {
             <tr>
               <th>Cliente</th>
               <th>Email</th>
-              <th>Dirección</th>
               <th>Productos</th>
               <th>Total</th>
               <th>Pago</th>
               <th>Envío</th>
-              <th>Fecha</th>
+              <th>Tracking</th>
+              <th>Courier</th>
+              <th>Fechas</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {ordenes.map((orden) => (
-              <tr key={orden._id}>
-                <td>{orden.envio?.nombre}</td>
-                <td>{orden.envio?.email}</td>
-                <td>
-                  {orden.envio?.direccion}, {orden.envio?.localidad}, {orden.envio?.provincia}
-                </td>
+            {compras.map((compra) => (
+              <tr key={compra._id}>
+                <td>{compra.usuario?.nombre || "-"}</td>
+                <td>{compra.usuario?.correo || "-"}</td>
                 <td>
                   <ul className="mb-0">
-                    {(orden.productos || []).map((p, i) => (
+                    {(compra.productos || []).map((p, i) => (
                       <li key={i}>
                         {p.nombre} × {p.cantidad}
                         {p.talle ? ` (${p.talle})` : ""}
@@ -256,45 +204,112 @@ const AdminCompras = () => {
                     ))}
                   </ul>
                 </td>
-                <td>${orden.total}</td>
-                <td style={{ minWidth: 140 }}>
-                  <Form.Select
-                    value={orden.estado}
-                    onChange={(e) => actualizarPago(orden._id, e.target.value)}
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="pagado">Pagado</option>
-                    <option value="cancelado">Cancelado</option>
-                  </Form.Select>
+                <td>${compra.totalFinal}</td>
+                <td>
+                  <div className="d-flex align-items-center gap-2">
+                    <span
+                      className={`badge ${
+                        compra.estado === "pagada"
+                          ? "bg-success"
+                          : compra.estado === "cancelada" || compra.estado === "fallida"
+                          ? "bg-danger"
+                          : compra.estado === "reembolsada"
+                          ? "bg-secondary"
+                          : "bg-warning text-dark"
+                      }`}
+                    >
+                      {compra.estado}
+                    </span>
+                    <Button
+                      variant="outline-success"
+                      size="sm"
+                      onClick={() => confirmarPago(compra._id)}
+                      disabled={compra.estado !== "pendiente"}
+                    >
+                       Confirmar pago
+                    </Button>
+                  </div>
                 </td>
+
+                {/* Estado de envío */}
                 <td style={{ minWidth: 160 }}>
                   <Form.Select
-                    value={orden.estadoEnvio}
-                    onChange={(e) => actualizarEnvio(orden._id, e.target.value)}
+                    value={compra.estadoEnvio || "pendiente"}
+                    onChange={(e) =>
+                      setCompras((prev) =>
+                        prev.map((c) =>
+                          c._id === compra._id ? { ...c, estadoEnvio: e.target.value } : c
+                        )
+                      )
+                    }
                   >
                     <option value="pendiente">Pendiente</option>
-                    <option value="preparando">Preparando</option>
                     <option value="enviado">Enviado</option>
                     <option value="entregado">Entregado</option>
                   </Form.Select>
                 </td>
-                <td>{new Date(orden.createdAt || orden.fecha).toLocaleDateString()}</td>
+
+                {/* Tracking */}
+                <td style={{ minWidth: 180 }}>
+                  <Form.Control
+                    placeholder="Número de seguimiento"
+                    value={compra.trackingNumber || ""}
+                    onChange={(e) =>
+                      setCompras((prev) =>
+                        prev.map((c) =>
+                          c._id === compra._id ? { ...c, trackingNumber: e.target.value } : c
+                        )
+                      )
+                    }
+                  />
+                </td>
+
+                {/* Courier */}
+                <td style={{ minWidth: 160 }}>
+                  <Form.Control
+                    placeholder="Courier"
+                    value={compra.courier || ""}
+                    onChange={(e) =>
+                      setCompras((prev) =>
+                        prev.map((c) =>
+                          c._id === compra._id ? { ...c, courier: e.target.value } : c
+                        )
+                      )
+                    }
+                  />
+                </td>
+
+                {/* Fechas */}
                 <td>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => cancelarOrden(orden._id)}
-                    disabled={orden.estado === "cancelado"}
-                  >
-                    Cancelar
-                  </Button>
+                  <div className="small">
+                    <div>Creada: {new Date(compra.createdAt).toLocaleDateString()}</div>
+                    {compra.fechaEnvio && (
+                      <div>Envío: {new Date(compra.fechaEnvio).toLocaleDateString()}</div>
+                    )}
+                    {compra.fechaEntrega && (
+                      <div>Entrega: {new Date(compra.fechaEntrega).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                </td>
+
+                {/* Acciones */}
+                <td>
+                  <div className="d-flex flex-column gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => guardarEnvio(compra)}
+                    >
+                      Guardar envío
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {ordenes.length === 0 && (
+            {compras.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center">
-                  No hay órdenes para los filtros seleccionados.
+                <td colSpan={10} className="text-center">
+                  No hay compras para los filtros seleccionados.
                 </td>
               </tr>
             )}
@@ -309,3 +324,4 @@ const AdminCompras = () => {
 };
 
 export default AdminCompras;
+

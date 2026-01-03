@@ -10,17 +10,17 @@ const ClientePage = () => {
   useEffect(() => {
     if (cargando) return;
     if (!usuario || usuario.rol !== "CLIENTE") {
-      navigate("/Cuenta");
+      navigate("/cuenta"); 
       return;
     }
 
     const cargarCompras = async () => {
       try {
-        const token = localStorage.getItem("token"); // 👈 guardado en login
+        const token = localStorage.getItem("token");
         const resp = await fetch("http://localhost:3000/api/compras/mias", {
           headers: {
             "Content-Type": "application/json",
-            "x-token": token, // 👈 coincide con tu validarJWT
+            "x-token": token,
           },
         });
 
@@ -43,7 +43,8 @@ const ClientePage = () => {
   const iniciarPago = async (compraId) => {
     try {
       const token = localStorage.getItem("token");
-      const resp = await fetch(`http://localhost:3000/api/pagos/${compraId}`, {
+      const resp = await fetch(`http://localhost:3000/api/pagos/crear/${compraId}`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-token": token,
@@ -53,7 +54,7 @@ const ClientePage = () => {
       const data = await resp.json();
 
       if (resp.ok && data.init_point) {
-        window.location.href = data.init_point; // redirige al checkout de MercadoPago
+        window.location.href = data.init_point;
       } else {
         alert("No se pudo iniciar el pago");
       }
@@ -64,6 +65,19 @@ const ClientePage = () => {
   };
 
   if (cargando) return <p className="text-center mt-5">Cargando...</p>;
+
+  // 🔑 Función segura para formatear fechas
+  const formatDate = (dateString) => {
+    if (!dateString) return "Sin fecha";
+    const fecha = new Date(dateString);
+    return isNaN(fecha.getTime())
+      ? "Sin fecha"
+      : fecha.toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+  };
 
   return (
     <div className="container py-4">
@@ -102,11 +116,11 @@ const ClientePage = () => {
                   <div className="card border-light shadow-sm h-100" style={{ fontSize: "0.9rem" }}>
                     <div className="card-body p-2">
                       <h6 className="card-title mb-1">
-                        Fecha: {new Date(compra.fecha).toLocaleDateString()}
+                        Fecha creación: {formatDate(compra.createdAt)}
                       </h6>
-                      <p className="mb-1"><strong>Total:</strong> ${compra.total}</p>
+                      <p className="mb-1"><strong>Total:</strong> ${compra.totalFinal}</p>
                       <p className="mb-1">
-                        <strong>Estado:</strong>{" "}
+                        <strong>Estado pago:</strong>{" "}
                         <span
                           className={`badge ${
                             compra.estado === "pagada"
@@ -118,6 +132,17 @@ const ClientePage = () => {
                         >
                           {compra.estado}
                         </span>
+                      </p>
+                      <p className="mb-1">
+                        <strong>Estado envío:</strong> {compra.estadoEnvio}
+                      </p>
+
+                      {/* 📅 Fechas de envío y entrega */}
+                      <p className="mb-1">
+                        <strong>Fecha envío:</strong> {formatDate(compra.fechaEnvio)}
+                      </p>
+                      <p className="mb-1">
+                        <strong>Fecha entrega:</strong> {formatDate(compra.fechaEntrega)}
                       </p>
 
                       {/* Botón de pago solo si está pendiente */}
@@ -153,5 +178,4 @@ const ClientePage = () => {
 };
 
 export default ClientePage;
-
 

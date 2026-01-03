@@ -31,3 +31,4 @@ const CuotasMercadoPago = ({ cuotasMP = [] }) => (
 );
 
 export default CuotasMercadoPago;
+

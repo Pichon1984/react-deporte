@@ -16,6 +16,7 @@ const Admin = () => {
   const [showModal, setShowModal] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
+  // ✅ Cargar productos al iniciar
   useEffect(() => {
     const fetchProductos = async () => {
       const token = localStorage.getItem("token");
@@ -35,6 +36,7 @@ const Admin = () => {
     fetchProductos();
   }, []);
 
+  // ✅ Guardar producto (nuevo o edición)
   const handleGuardar = async (producto) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -67,6 +69,7 @@ const Admin = () => {
     }
   };
 
+  // ✅ Eliminar producto
   const handleEliminar = async (id) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -84,6 +87,7 @@ const Admin = () => {
     }
   };
 
+  // ✅ Filtrar productos
   const productosFiltrados = productos.filter((p) => {
     const coincideNombre = filtros.nombre
       ? p.nombre.toLowerCase().includes(filtros.nombre.toLowerCase())
@@ -146,7 +150,7 @@ const Admin = () => {
           </div>
         </Col>
 
-        {/* Contenido */}
+        {/* Contenido dinámico */}
         <Col xs={12} md={9}>
           {seccion === "productos" && (
             <>
@@ -214,4 +218,3 @@ const Admin = () => {
 };
 
 export default Admin;
-

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { CarritoContext } from "../context/CarritoContext";
 import { BsTrash } from "react-icons/bs";
@@ -12,50 +12,108 @@ const CarritoPage = () => {
     vaciarCarrito,
     eliminarProductoTotal
   } = useContext(CarritoContext);
+
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🛒 Subtotal de productos
   const calcularTotal = () =>
     carrito.reduce(
       (total, item) =>
-        total + Number(item.productoId?.precio || 0) * item.cantidad,
+        total + Number(item.productoId?.precio || 0) * Number(item.cantidad || 0),
       0
     );
 
-  // 👉 función para confirmar compra desde carrito
+  // 🚚 cálculo proporcional de envío
+  function calcularEnvio(subtotal) {
+    const ENVIO_BASE = 30000;
+    const LIMITE_ENVIO_GRATIS = 200000;
+
+    if (subtotal >= LIMITE_ENVIO_GRATIS) return 0;
+    const descuento = (subtotal / LIMITE_ENVIO_GRATIS) * ENVIO_BASE;
+    return Math.max(ENVIO_BASE - descuento, 0);
+  }
+
+  // 👉 confirmar compra desde carrito → Checkout con Brick
   async function confirmarCarrito() {
     try {
+      setLoading(true);
+
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("❌ No hay token de autenticación");
+        setLoading(false);
+        return;
+      }
+
       const headers = {
         "Content-Type": "application/json",
-        "x-token": token // 👈 coincide con tu middleware
+        "x-token": token
       };
 
-      // transformar carrito a la estructura que espera el modelo Compra
       const productos = carrito.map(item => ({
         productoId: item.productoId._id,
         nombre: item.productoId.nombre,
-        precio: item.productoId.precio,
-        cantidad: item.cantidad,
+        precio: Number(item.productoId.precio || 0),
+        cantidad: Number(item.cantidad || 0),
         talle: item.talle
       }));
 
-      const total = calcularTotal();
+      const subtotal = calcularTotal();
+      const costoEnvio = calcularEnvio(subtotal);
+      const totalFinal = subtotal + costoEnvio;
 
-      const res = await fetch("/api/compras", {
+      // ⚠️ Datos de envío: reemplazar por los reales del formulario
+      const envio = {
+        metodo: "domicilio",
+        nombre: "Nombre del cliente",
+        email: "cliente@cliente.com",
+        direccion: "Dirección completa",
+        localidad: "Localidad",
+        provincia: "Provincia",
+        codigoPostal: "0000",
+        telefono: "Teléfono",
+        pais: "Argentina"
+      };
+
+      // 1️⃣ Crear Orden
+      const ordenRes = await fetch("/api/ordenes/checkout", {
         method: "POST",
         headers,
-        body: JSON.stringify({ productos, total })
+        body: JSON.stringify({ productos, envio })
+      });
+      const ordenData = await ordenRes.json();
+
+      if (!ordenRes.ok || !ordenData.ordenId) {
+        console.error("❌ Error creando orden:", ordenData.error);
+        setLoading(false);
+        return;
+      }
+
+      // 2️⃣ Crear Compra con ordenId
+      const compraRes = await fetch("/api/compras", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          ordenId: ordenData.ordenId,
+          productos,
+          total: subtotal,
+          costoEnvio,
+          totalFinal
+        })
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        // redirigir al checkout de la compra recién creada
-        navigate(`/checkout/${data._id}`);
+      const compraData = await compraRes.json();
+      if (compraRes.ok && compraData.compra?._id) {
+        // ✅ Redirigir al checkout con Brick (cuotas)
+        navigate(`/checkout/${compraData.compra._id}`);
       } else {
-        console.error("Error creando compra desde carrito:", data.error);
+        console.error("❌ Error creando compra:", compraData.error);
       }
     } catch (err) {
-      console.error("Error en confirmarCarrito:", err);
+      console.error("❌ Error en confirmarCarrito:", err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -104,7 +162,6 @@ const CarritoPage = () => {
 
       {carrito.map((item, index) => (
         <Row key={index} className="align-items-center mb-4 border-bottom pb-3">
-          {/* Imagen */}
           <Col xs={4} md={2}>
             <Image
               src={
@@ -117,25 +174,21 @@ const CarritoPage = () => {
               fluid
               rounded
               onError={(e) => {
-                e.currentTarget.onerror = null; // evita loop
+                e.currentTarget.onerror = null;
                 e.currentTarget.src = "/assets/img/default.png";
               }}
             />
           </Col>
 
-
-
-          {/* Info producto */}
           <Col xs={8} md={6}>
             <h5>{item.productoId?.nombre}</h5>
             <p className="mb-1">Talle: {item.talle}</p>
             <p className="text-success fw-bold">
               ${Number(item.productoId?.precio || 0)} x {item.cantidad} = $
-              {(Number(item.productoId?.precio || 0) * item.cantidad).toLocaleString("es-AR")}
+              {(Number(item.productoId?.precio || 0) * Number(item.cantidad || 0)).toLocaleString("es-AR")}
             </p>
           </Col>
 
-          {/* Acciones */}
           <Col
             xs={12}
             md={4}
@@ -158,9 +211,7 @@ const CarritoPage = () => {
             </Button>
             <Button
               variant="outline-danger"
-              onClick={() =>
-                eliminarProductoTotal(item.productoId._id, item.talle)
-              }
+              onClick={() => eliminarProductoTotal(item.productoId._id, item.talle)}
               title="Eliminar producto"
             >
               <BsTrash size={20} />
@@ -169,7 +220,6 @@ const CarritoPage = () => {
         </Row>
       ))}
 
-      {/* Total y acciones */}
       <Row className="mt-4">
         <Col className="text-end">
           <h4>Total: ${calcularTotal().toLocaleString("es-AR")}</h4>
@@ -177,13 +227,15 @@ const CarritoPage = () => {
             variant="success"
             className="mt-2"
             onClick={confirmarCarrito}
+            disabled={loading}
           >
-            Terminar compra
+            {loading ? "Procesando..." : "Terminar compra"}
           </Button>
           <Button
             variant="outline-danger"
             className="mt-2 ms-2"
             onClick={vaciarCarrito}
+            disabled={loading}
           >
             Vaciar carrito
           </Button>
@@ -194,4 +246,3 @@ const CarritoPage = () => {
 };
 
 export default CarritoPage;
-

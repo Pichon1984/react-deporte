@@ -17,25 +17,34 @@ import ListaConsultas from '../components/ListaConsultas';
 
 import MiniaturasCarrusel from '../components/carrusel/MiniaturasCarrusel';
 import ImagenPrincipal from '../components/carrusel/ImagenPrincipal';
+import PagoMercadoPago from '../components/PagoMercadoPago';
 
 function DetalleProducto() {
   const { id } = useParams();
   const [producto, setProducto] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [talleSeleccionado, setTalleSeleccionado] = useState('');
   const [cantidad, setCantidad] = useState(1);
+
+  const [envioSeleccionado, setEnvioSeleccionado] = useState('');
+  const [envioAndreani, setEnvioAndreani] = useState(null);
+
+  const [cuotasMP, setCuotasMP] = useState([]);
   const [mostrarToast, setMostrarToast] = useState(false);
+
   const { agregarProducto } = useContext(CarritoContext);
 
   const [mensajeConsulta, setMensajeConsulta] = useState('');
-  const [envioSeleccionado, setEnvioSeleccionado] = useState('');
-  const [cuotasMP, setCuotasMP] = useState([]);
-  const [envioAndreani, setEnvioAndreani] = useState(null);
+  const [refreshConsultas, setRefreshConsultas] = useState(false);
 
   const [expandido, setExpandido] = useState(false);
   const limiteDescripcion = 250;
 
-  const [refreshConsultas, setRefreshConsultas] = useState(false);
+  const [preferenceId, setPreferenceId] = useState(null);
+
+  // Calcular monto total de forma segura
+  const montoTotal = ((producto?.precio || 0) * cantidad) + (envioAndreani?.costo || 0);
 
   // Cargar producto
   useEffect(() => {
@@ -50,6 +59,22 @@ function DetalleProducto() {
     };
     if (id) fetchProducto();
   }, [id]);
+
+  // Cotización Andreani
+  useEffect(() => {
+    const fetchEnvioAndreani = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/envios/andreani?origen=1000&destino=4000&peso=${producto?.peso || 1}`
+        );
+        const data = await res.json();
+        setEnvioAndreani(data);
+      } catch (error) {
+        console.error('Error obteniendo envío Andreani:', error);
+      }
+    };
+    if (producto) fetchEnvioAndreani();
+  }, [producto]);
 
   // Cuotas MercadoPago
   useEffect(() => {
@@ -77,25 +102,28 @@ function DetalleProducto() {
     if (producto?.precio) fetchCuotas();
   }, [producto]);
 
-  // Envío Andreani
+  // Crear preferencia de pago
   useEffect(() => {
-    const fetchEnvioAndreani = async () => {
+    const crearPreferencia = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/envios/andreani?origen=1000&destino=4000&peso=${producto.peso || 1}`
-        );
+        const res = await fetch(`http://localhost:3000/api/pagos/crear/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
         const data = await res.json();
-        setEnvioAndreani(data);
+        if (data.ok) {
+          setPreferenceId(data.id);
+        }
       } catch (error) {
-        console.error('Error obteniendo envío Andreani:', error);
+        console.error('Error creando preferencia MP:', error);
       }
     };
-    if (producto) fetchEnvioAndreani();
-  }, [producto]);
+    if (producto) crearPreferencia();
+  }, [producto, id]);
 
   if (!producto) return <h2 className="text-center py-5">Producto no encontrado</h2>;
 
-  const imagenes = (producto.imagenes && producto.imagenes.length > 0)
+  const imagenes = (producto.imagenes?.length > 0)
     ? producto.imagenes
     : [producto.img || '/placeholder.jpg'];
 
@@ -157,6 +185,7 @@ function DetalleProducto() {
     }
   };
 
+
   return (
     <Container className="py-5">
       <Row className="align-items-start">
@@ -198,7 +227,7 @@ function DetalleProducto() {
             </Alert>
           )}
 
-          {/* Talles en cuadrados */}
+          {/* Talles */}
           {producto.talles?.length > 0 && (
             <div className="mt-3">
               <h5>Talles disponibles</h5>
@@ -218,7 +247,6 @@ function DetalleProducto() {
             </div>
           )}
 
-          {/* Cantidad */}
           <div className="mt-3">
             <h5>Cantidad</h5>
             <Form.Control
@@ -232,7 +260,7 @@ function DetalleProducto() {
             <small className="text-muted">Stock disponible: {producto.stock || 0}</small>
           </div>
 
-          {/* Métodos de envío con descripción y costo */}
+          {/* Métodos de envío */}
           {producto.envio?.metodos?.length > 0 && (
             <div className="mt-3">
               <h5>Métodos de envío</h5>
@@ -251,7 +279,7 @@ function DetalleProducto() {
             </div>
           )}
 
-          {/* Envío Andreani (cotización) */}
+          {/* Cotización Andreani */}
           {envioAndreani && (
             <div className="mt-3">
               <h5>Envío con Andreani</h5>
@@ -289,6 +317,15 @@ function DetalleProducto() {
               <p className="text-muted">Financiación disponible al pagar con MercadoPago</p>
             )}
           </div>
+
+          {/* Botón de pago MercadoPago */}
+          {preferenceId && (
+            <div className="mt-3">
+              <h5>Finalizar compra</h5>
+              <PagoMercadoPago preferenceId={preferenceId} amount={montoTotal} />
+            </div>
+          )}
+
 
           <Button
             variant="primary"
@@ -343,4 +380,3 @@ function DetalleProducto() {
 }
 
 export default DetalleProducto;
-
