@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Usamos la variable de entorno para el backend
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -21,11 +24,11 @@ export const AuthProvider = ({ children }) => {
 
     const cargarUsuario = async () => {
       try {
-        const resp = await fetch("http://localhost:3000/api/usuarios/me", {
+        const resp = await fetch(`${API_URL}/api/usuarios/me`, {
           headers: {
             "Content-Type": "application/json",
-            "x-token": storedToken // 👈 tu backend espera este header
-          }
+            "x-token": storedToken, // 👈 tu backend espera este header
+          },
         });
 
         if (resp.ok) {
@@ -35,14 +38,14 @@ export const AuthProvider = ({ children }) => {
             id: data._id || data.id,
             nombre: data.nombre,
             apellido: data.apellido,
-            correo: data.correo, // 👈 mantenemos "correo" como en el backend
+            correo: data.correo,
             rol: (data.rol || "").toUpperCase(),
             telefono: data.telefono,
             direccion: data.direccion,
             provincia: data.provincia,
             localidad: data.localidad,
             codigoPostal: data.codigoPostal,
-            dni: data.dni
+            dni: data.dni,
           };
 
           setUsuario(usuarioData);
@@ -51,6 +54,7 @@ export const AuthProvider = ({ children }) => {
           setToken(null);
         }
       } catch (err) {
+        console.error("Error cargando usuario:", err);
         setUsuario(null);
         setToken(null);
       } finally {
@@ -59,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, [navigate]);
+  }, []); // 👈 solo al montar, no depende de navigate
 
   // 👉 Login: guardar token y usuario
   const logIn = (usuarioData, token) => {
@@ -77,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       provincia: usuarioData.provincia,
       localidad: usuarioData.localidad,
       codigoPostal: usuarioData.codigoPostal,
-      dni: usuarioData.dni
+      dni: usuarioData.dni,
     };
 
     setUsuario(usuarioNormalizado);
