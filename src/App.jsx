@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 
 import Inicio from "./PagesPrincipal/Inicio";
 import Contacto from "./PagesPrincipal/Contacto";
-import Nosotros from "./PagesPrincipal/Nosotros"; // ✅ corregido (import default)
+import Nosotros from "./PagesPrincipal/Nosotros";
 import Cuenta from "./PagesPrincipal/Cuenta";
 import Carrito from "./PagesPrincipal/Carrito";
 import Registro from "./PagesPrincipal/Registro";
@@ -21,12 +21,13 @@ import CategoriaPage from "./components/CategoriaPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // ✅ Importamos los componentes de checkout
-import { CheckoutButton } from "./components/CheckoutButton";
+import Checkout from "./PagesPrincipal/Checkout"; // Brick
 import { CheckoutSuccess } from "./PagesPrincipal/CheckoutSuccess";
 import { CheckoutFailure } from "./PagesPrincipal/CheckoutFailure";
 import { CheckoutPending } from "./PagesPrincipal/CheckoutPending";
 
 import BuscarPage from "./PagesPrincipal/BuscarPage";
+import DetalleCompra from "./PagesPrincipal/DetalleCompra";
 
 function App() {
   return (
@@ -46,9 +47,10 @@ function App() {
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/compras/:compraId" element={<DetalleCompra />} />
 
-          {/* Checkout */}
-          <Route path="/checkout" element={<CheckoutButton />} />
+          {/* Checkout con Brick */}
+          <Route path="/checkout/:compraId" element={<Checkout />} />
           <Route path="/checkout/success/:id" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure/:id" element={<CheckoutFailure />} />
           <Route path="/checkout/pending/:id" element={<CheckoutPending />} />
@@ -83,4 +85,3 @@ function App() {
 }
 
 export default App;
-
