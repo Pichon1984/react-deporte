@@ -1,5 +1,3 @@
-import { API_URL } from "../services/api";
-
 // Helper para manejar respuestas
 async function handleResponse(res) {
   let data;
@@ -15,6 +13,9 @@ async function handleResponse(res) {
 
   return { ok: true, status: res.status, data };
 }
+
+// Normalizar API_URL (evitar doble barra)
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 const headers = { "Content-Type": "application/json" };
 
@@ -41,7 +42,10 @@ export async function login(correo, password) {
 // Perfil del usuario logueado (usando x-token)
 export async function getProfile(token) {
   const res = await fetch(`${API_URL}/api/auth/me`, {
-    headers: { "x-token": token },
+    headers: {
+      ...headers,
+      "x-token": token,
+    },
   });
   return handleResponse(res);
 }
@@ -50,13 +54,11 @@ export async function getProfile(token) {
 export async function forgotPassword(email) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ correo: email }),
   });
-  return res.json(); // 👈 importante
+  return handleResponse(res);
 }
-
-
 
 // Reset password
 export async function resetPassword(token, newPassword) {
@@ -65,7 +67,7 @@ export async function resetPassword(token, newPassword) {
     const res = await fetch(`${API_URL}/api/auth/reset-password`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ token, newPassword }), // 👈 ahora coincide con backend
+      body: JSON.stringify({ token, newPassword }),
     });
     return handleResponse(res);
   } catch (error) {
@@ -74,9 +76,14 @@ export async function resetPassword(token, newPassword) {
   }
 }
 
+// Compras service
 export const ComprasService = {
   getById: async (id) => {
     if (!id) throw new Error("El ID de la compra es requerido");
-    return httpGet(`/api/compras/${encodeURIComponent(id)}`);
+    const res = await fetch(`${API_URL}/api/compras/${encodeURIComponent(id)}`, {
+      headers,
+    });
+    return handleResponse(res);
   },
 };
+
