@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Image, Spinner } from 'react-bootstrap';
 
-const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
+const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
   const [producto, setProducto] = useState({
     nombre: '',
     precio: '',
@@ -10,7 +10,7 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
     descripcion: '',
     tallesTexto: '',
     imagenes: [],
-    ...productoInicial,
+    ...productoInicial, // 👈 si viene un producto para editar, se carga aquí
   });
 
   const [categorias, setCategorias] = useState([]);
@@ -21,7 +21,7 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/categorias");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categorias`);
         const data = await res.json();
         // si tu backend devuelve { categorias: [...] }
         setCategorias(data.categorias || data);
@@ -57,9 +57,9 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
 
     const nuevoProducto = {
       ...producto,
-      categoria: producto.categoria, // 👈 ahora es el _id
+      categoria: producto.categoria, // 👈 aquí ya es el _id seleccionado
       talles,
-      fechaCreacion: producto.fechaCreacion || new Date().toISOString()
+      fechaCreacion: producto.fechaCreacion || new Date().toISOString(),
     };
 
     console.log("Categoría seleccionada (ID):", producto.categoria);
@@ -67,17 +67,19 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
 
     onGuardar(nuevoProducto);
 
-    // reset form
-    setProducto({
-      nombre: '',
-      precio: '',
-      categoria: '',
-      stock: '',
-      descripcion: '',
-      tallesTexto: '',
-      imagenes: [],
-    });
-    setUrlTemporal('');
+    // reset form solo si es creación, no edición
+    if (!productoInicial._id) {
+      setProducto({
+        nombre: '',
+        precio: '',
+        categoria: '',
+        stock: '',
+        descripcion: '',
+        tallesTexto: '',
+        imagenes: [],
+      });
+      setUrlTemporal('');
+    }
   };
 
   // 📷 Subir imagen a Cloudinary
@@ -271,4 +273,5 @@ const ProductoForm = ({ productoInicial, onGuardar, onCancelar }) => {
 };
 
 export default ProductoForm;
+
 
