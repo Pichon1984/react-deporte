@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Container, Nav, Navbar, NavDropdown, Button, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Container, Nav, Navbar, NavDropdown, Button, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
 import { NavLink, useNavigate } from "react-router-dom";
 import { CarritoContext } from '../context/CarritoContext';
 import { AuthContext } from '../context/AuthContext';
@@ -15,12 +15,19 @@ export const NavigateApp = () => {
   const navigate = useNavigate();
 
   const [categorias, setCategorias] = useState([]);
+  const [loadingCategorias, setLoadingCategorias] = useState(true);
 
   useEffect(() => {
     const fetchCategorias = async () => {
-      const respuesta = await getCategorias();
-      if (respuesta.ok) {
-        setCategorias(respuesta.data.categorias || []);
+      try {
+        const respuesta = await getCategorias();
+        if (respuesta.ok) {
+          setCategorias(respuesta.data.categorias || []);
+        }
+      } catch (error) {
+        console.error("❌ Error cargando categorías:", error);
+      } finally {
+        setLoadingCategorias(false);
       }
     };
     fetchCategorias();
@@ -81,15 +88,23 @@ export const NavigateApp = () => {
         <Navbar.Collapse id="navbar-nav">
           <Nav className="me-auto">
             <NavDropdown title="Categorías" id="nav-dropdown">
-              {categorias.map((cat) => (
-                <NavDropdown.Item
-                  key={cat._id}
-                  as={NavLink}
-                  to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
-                >
-                  {cat.nombre}
+              {loadingCategorias ? (
+                <NavDropdown.Item>
+                  <Spinner animation="border" size="sm" /> Cargando...
                 </NavDropdown.Item>
-              ))}
+              ) : categorias.length > 0 ? (
+                categorias.map((cat) => (
+                  <NavDropdown.Item
+                    key={cat._id}
+                    as={NavLink}
+                    to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
+                  >
+                    {cat.nombre}
+                  </NavDropdown.Item>
+                ))
+              ) : (
+                <NavDropdown.Item disabled>No hay categorías</NavDropdown.Item>
+              )}
             </NavDropdown>
 
             <Nav.Link as={NavLink} to="/Nosotros">Nosotros</Nav.Link>
@@ -135,10 +150,3 @@ export const NavigateApp = () => {
 };
 
 export default NavigateApp;
-
-
-
-
-
-
-
