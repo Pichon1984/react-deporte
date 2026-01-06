@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Spinner, Alert, Form, Pagination } from "rea
 import { getProductos } from "../services/api"; // 🔹 Helper
 
 function CategoriaPage() {
-  const { id } = useParams(); // 👈 ahora recibimos el _id de la categoría
+  const { id } = useParams(); // 👈 recibimos el _id de la categoría desde la URL
   const navigate = useNavigate();
 
   const [productos, setProductos] = useState([]);
@@ -14,14 +14,19 @@ function CategoriaPage() {
   const [filtroNombre, setFiltroNombre] = useState("");
   const [ordenPrecio, setOrdenPrecio] = useState("");
 
-  // 🔹 Estado para paginación
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 12;
 
   const fetchProductos = async (pagina = 1) => {
+    if (!id || id === "undefined") {
+      setError("Categoría inválida");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const respuesta = await getProductos(id, pagina, limit); // 👈 usamos id en vez de nombre
+    const respuesta = await getProductos(id, pagina, limit);
 
     if (!respuesta.ok) {
       setError(`Error HTTP: ${respuesta.status} - ${respuesta.data.msg || "Error desconocido"}`);
@@ -37,10 +42,10 @@ function CategoriaPage() {
   };
 
   useEffect(() => {
+    console.log("ID recibido en CategoriaPage:", id); // 👈 debería mostrar un ObjectId
     fetchProductos(1);
   }, [id]);
 
-  // 🔹 Filtrado y orden
   let productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
   );
