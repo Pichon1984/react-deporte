@@ -1,7 +1,8 @@
-
 import '../styles/inicio.css'
 import { Carousel, Card, Row, Col, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getCategorias } from '../services/api'; // 👈 servicio que trae categorías
 
 import Desktop from '../assets/img/Desktop.webp';
 import Desktop2 from '../assets/img/Desktop2.webp';
@@ -14,6 +15,25 @@ import pelota from '../assets/img/pelota-de-futbol-adidas-messi-mini-rosa-100040
 import PromoModal from '../components/PromoModal';
 
 export function Inicio() {
+  const [categorias, setCategorias] = useState([]);
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      const respuesta = await getCategorias();
+      if (respuesta.ok) {
+        setCategorias(respuesta.data.categorias || []);
+      }
+    };
+    fetchCategorias();
+  }, []);
+
+  // Mapeo de imágenes según nombre (puede venir del backend también)
+  const imagenesPorNombre = {
+    calzado: zapatilla,
+    indumentaria: camiseta,
+    accesorios: pelota,
+  };
+
   return (
     <>
       {/* Modal de promoción */}
@@ -23,15 +43,12 @@ export function Inicio() {
         <Carousel>
           <Carousel.Item>
             <img src={Desktop} className="d-block w-100" alt="Futurista" />
-            <Carousel.Caption></Carousel.Caption>
           </Carousel.Item>
           <Carousel.Item>
             <img src={Desktop2} className="d-block w-100" alt="Humano" />
-            <Carousel.Caption></Carousel.Caption>
           </Carousel.Item>
           <Carousel.Item>
             <img src={Desktop3} className="d-block w-100" alt="Minimalista" />
-            <Carousel.Caption></Carousel.Caption>
           </Carousel.Item>
         </Carousel>
       </div>
@@ -40,56 +57,32 @@ export function Inicio() {
       <Container className="my-5">
         <h1 className="text-center mb-4">Lanzamientos</h1>
 
-        {/* Cards */}
+        {/* Cards dinámicas */}
         <Row className="g-4 justify-content-center">
-          <Col md={4}>
-            <Card className="h-100 text-center">
-              <Link to="/categoria/calzado" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Card.Img
-                  variant="top"
-                  src={zapatilla}
-                  style={{ height: '200px', objectFit: 'contain' }}
-                />
-                <Card.Body>
-                  <Card.Title>Calzados</Card.Title>
-                </Card.Body>
-              </Link>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card className="h-100 text-center">
-              <Link to="/categoria/indumentaria" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Card.Img
-                  variant="top"
-                  src={camiseta}
-                  style={{ height: '200px', objectFit: 'contain' }}
-                />
-                <Card.Body>
-                  <Card.Title>Indumentarias</Card.Title>
-                </Card.Body>
-              </Link>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card className="h-100 text-center">
-              <Link to="/categoria/accesorios" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Card.Img
-                  variant="top"
-                  src={pelota}
-                  style={{ height: '200px', objectFit: 'contain' }}
-                />
-                <Card.Body>
-                  <Card.Title>Accesorios</Card.Title>
-                </Card.Body>
-              </Link>
-            </Card>
-          </Col>
+          {categorias.map((cat) => (
+            <Col key={cat._id} md={4}>
+              <Card className="h-100 text-center">
+                <Link
+                  to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <Card.Img
+                    variant="top"
+                    src={imagenesPorNombre[cat.nombre] || '/placeholder.jpg'}
+                    style={{ height: '200px', objectFit: 'contain' }}
+                  />
+                  <Card.Body>
+                    <Card.Title>{cat.nombre}</Card.Title>
+                  </Card.Body>
+                </Link>
+              </Card>
+            </Col>
+          ))}
         </Row>
       </Container>
     </>
-  )
+  );
 }
+
 export default Inicio;
 

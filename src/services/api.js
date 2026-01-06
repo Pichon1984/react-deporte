@@ -29,14 +29,9 @@ function getHeaders(token) {
 }
 
 // --- Endpoints de Productos ---
-export async function getProductos(categoria, page = 1, limit = 12) {
-  // ✅ Detecta si es ObjectId o nombre
-  const isObjectId = /^[0-9a-fA-F]{24}$/.test(categoria);
-
-  const url = isObjectId
-    ? `${API_URL}/api/categorias/id/${categoria}/productos?page=${page}&limit=${limit}`
-    : `${API_URL}/api/categorias/nombre/${categoria}/productos?page=${page}&limit=${limit}`;
-
+export async function getProductos(categoriaId, page = 1, limit = 12) {
+  // ✅ Siempre usamos la ruta por _id
+  const url = `${API_URL}/api/categorias/id/${categoriaId}/productos?page=${page}&limit=${limit}`;
   const res = await fetch(url);
   return handleResponse(res);
 }
@@ -123,4 +118,3 @@ export async function removeFromCarrito(token, productoId) {
 
 // 🔹 Exporta la constante para que otros componentes puedan usarla
 export { API_URL };
-

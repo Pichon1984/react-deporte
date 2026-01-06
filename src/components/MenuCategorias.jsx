@@ -20,8 +20,9 @@ const MenuCategorias = () => {
       <ul>
         {categorias.map((cat) => (
           <li key={cat._id}>
-            {/* ✅ ahora usamos la ruta /id/:id */}
-            <Link to={`/categoria/${cat._id}`}>{cat.nombre}</Link>
+            {/* ✅ Usamos siempre _id, funciona en local y producción */}
+<Link to={`/categoria/${cat._id}`}>{cat.nombre}</Link>
+
           </li>
         ))}
       </ul>

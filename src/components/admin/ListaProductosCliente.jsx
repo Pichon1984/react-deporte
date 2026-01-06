@@ -44,11 +44,26 @@ const ListaProductosCliente = ({ productos }) => {
               )}
 
               <Card.Body>
-                <Card.Title>{p.nombre}</Card.Title>
-                <p className="fw-bold">
-                  ${Number(p.precio).toLocaleString("es-AR")}
-                </p>
-              </Card.Body>
+  <Card.Title>{p.nombre}</Card.Title>
+  <p className="fw-bold">
+    ${Number(p.precio).toLocaleString("es-AR")}
+  </p>
+
+  {p.categoria && (
+    <p>
+      <small>
+        <span
+          style={{ cursor: "pointer", color: "blue" }}
+          onClick={() => navigate(`/categoria/${p.categoria._id}`)}
+        >
+          {p.categoria.nombre}
+        </span>
+      </small>
+    </p>
+  )}
+</Card.Body>
+
+
             </Card>
           </Col>
         );
