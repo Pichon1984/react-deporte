@@ -27,7 +27,7 @@ export function Inicio() {
     fetchCategorias();
   }, []);
 
-  // Mapeo de imágenes según nombre (puede venir del backend también)
+  // Mapeo de imágenes según nombre (normalizado en minúsculas)
   const imagenesPorNombre = {
     calzado: zapatilla,
     indumentaria: camiseta,
@@ -68,7 +68,7 @@ export function Inicio() {
                 >
                   <Card.Img
                     variant="top"
-                    src={imagenesPorNombre[cat.nombre] || '/placeholder.jpg'}
+                    src={imagenesPorNombre[cat.nombre.toLowerCase()] || '/placeholder.jpg'}
                     style={{ height: '200px', objectFit: 'contain' }}
                   />
                   <Card.Body>
@@ -85,4 +85,3 @@ export function Inicio() {
 }
 
 export default Inicio;
-
