@@ -1,7 +1,10 @@
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:3000" : "https://base-datos-deporte.vercel.app");
+  (import.meta.env.DEV
+    ? "http://localhost:3000"
+    : "https://base-datos-deporte.vercel.app");
 
+// 🔹 Manejo de respuestas
 async function handleResponse(res) {
   let data;
   try {
@@ -17,6 +20,7 @@ async function handleResponse(res) {
   return { ok: true, status: res.status, data };
 }
 
+// 🔹 Headers con token opcional
 function getHeaders(token) {
   return {
     "Content-Type": "application/json",
@@ -26,14 +30,25 @@ function getHeaders(token) {
 
 // --- Endpoints de Productos ---
 export async function getProductos(categoria, page = 1, limit = 12) {
-  const res = await fetch(
-    `${API_URL}/api/productos?categoria=${categoria}&page=${page}&limit=${limit}`
-  );
+  // ✅ Detecta si es ObjectId o nombre
+  const isObjectId = /^[0-9a-fA-F]{24}$/.test(categoria);
+
+  const url = isObjectId
+    ? `${API_URL}/api/categorias/id/${categoria}/productos?page=${page}&limit=${limit}`
+    : `${API_URL}/api/categorias/nombre/${categoria}/productos?page=${page}&limit=${limit}`;
+
+  const res = await fetch(url);
   return handleResponse(res);
 }
 
 export async function getProductoById(id) {
   const res = await fetch(`${API_URL}/api/productos/${id}`);
+  return handleResponse(res);
+}
+
+// --- Endpoints de Categorías ---
+export async function getCategorias() {
+  const res = await fetch(`${API_URL}/api/categorias`);
   return handleResponse(res);
 }
 
@@ -106,5 +121,6 @@ export async function removeFromCarrito(token, productoId) {
   return handleResponse(res);
 }
 
-// 🔹 Exporta la constante para que AdminCompras.jsx pueda usarla
+// 🔹 Exporta la constante para que otros componentes puedan usarla
 export { API_URL };
+

@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, roles }) => {
 
   if (!usuario) {
     // Redirige al login/registro y guarda la ruta original
-    return <Navigate to="/registro" state={{ from: location }} replace />;
+    return <Navigate to="/inicio" state={{ from: location }} replace />;
   }
 
   if (roles && !roles.includes(usuario.rol)) {

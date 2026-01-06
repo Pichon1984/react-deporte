@@ -20,8 +20,7 @@ import CategoriaPage from "./components/CategoriaPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// ✅ Importamos los componentes de checkout
-import Checkout from "./PagesPrincipal/Checkout"; // Brick
+import Checkout from "./PagesPrincipal/Checkout";
 import { CheckoutSuccess } from "./PagesPrincipal/CheckoutSuccess";
 import { CheckoutFailure } from "./PagesPrincipal/CheckoutFailure";
 import { CheckoutPending } from "./PagesPrincipal/CheckoutPending";
@@ -42,7 +41,8 @@ function App() {
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/registro" element={<Registro />} />
-          <Route path="/categoria/:nombre" element={<CategoriaPage />} />
+          {/* ✅ corregido: usamos :id */}
+          <Route path="/categoria/:id" element={<CategoriaPage />} />
           <Route path="/detalle/:id" element={<DetalleProducto />} />
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

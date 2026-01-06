@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Spinner, Alert, Form, Pagination } from "react-bootstrap";
-import { getProductos } from "../services/api"; // 🔹 Importamos el helper
+import { getProductos } from "../services/api"; // 🔹 Helper
 
 function CategoriaPage() {
-  const { nombre } = useParams();
+  const { id } = useParams(); // 👈 recibimos el _id de la categoría desde la URL
   const navigate = useNavigate();
 
   const [productos, setProductos] = useState([]);
@@ -14,14 +14,19 @@ function CategoriaPage() {
   const [filtroNombre, setFiltroNombre] = useState("");
   const [ordenPrecio, setOrdenPrecio] = useState("");
 
-  // 🔹 Estado para paginación
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 12;
 
   const fetchProductos = async (pagina = 1) => {
+    if (!id || id === "undefined") {
+      setError("Categoría inválida");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const respuesta = await getProductos(nombre.toLowerCase(), pagina, limit);
+    const respuesta = await getProductos(id, pagina, limit);
 
     if (!respuesta.ok) {
       setError(`Error HTTP: ${respuesta.status} - ${respuesta.data.msg || "Error desconocido"}`);
@@ -37,10 +42,10 @@ function CategoriaPage() {
   };
 
   useEffect(() => {
+    console.log("ID recibido en CategoriaPage:", id); // 👈 debería mostrar un ObjectId
     fetchProductos(1);
-  }, [nombre]);
+  }, [id]);
 
-  // 🔹 Filtrado y orden
   let productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
   );
@@ -76,7 +81,7 @@ function CategoriaPage() {
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
-        <p>Cargando productos de {nombre}...</p>
+        <p>Cargando productos...</p>
       </Container>
     );
 
@@ -89,7 +94,7 @@ function CategoriaPage() {
 
   return (
     <Container className="py-5">
-      <h2 className="mb-4">Categoría: {nombre}</h2>
+      <h2 className="mb-4">Productos de la categoría</h2>
 
       {/* Filtros */}
       <Form className="mb-4 d-flex flex-wrap gap-3">
@@ -118,9 +123,7 @@ function CategoriaPage() {
       </Form>
 
       {productosFiltrados.length === 0 ? (
-        <Alert variant="warning">
-          No hay productos disponibles en {nombre} con esos filtros
-        </Alert>
+        <Alert variant="warning">No hay productos disponibles con esos filtros</Alert>
       ) : (
         <>
           <Row>
