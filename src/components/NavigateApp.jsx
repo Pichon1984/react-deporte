@@ -1,21 +1,33 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Container, Nav, Navbar, NavDropdown, Button, OverlayTrigger, Popover } from 'react-bootstrap';
 import { NavLink, useNavigate } from "react-router-dom";
 import { CarritoContext } from '../context/CarritoContext';
 import { AuthContext } from '../context/AuthContext';
-import { BsCart } from "react-icons/bs"; // 👈 icono carrito
+import { BsCart } from "react-icons/bs";
 import '../styles/NavigateApp.css';
 import logo from '../assets/img/logo.png';
 import SearchInput from './SearchInput';
+import { getCategorias } from '../services/api'; // 👈 servicio que trae categorías
 
 export const NavigateApp = () => {
   const { carrito } = useContext(CarritoContext);
   const { usuario, logOut } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [categorias, setCategorias] = useState([]);
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      const respuesta = await getCategorias();
+      if (respuesta.ok) {
+        setCategorias(respuesta.data.categorias || []);
+      }
+    };
+    fetchCategorias();
+  }, []);
+
   const auth = !!usuario;
 
-  // ✅ Calcular total usando productoId.precio
   const calcularTotal = () => {
     if (!Array.isArray(carrito)) return 0;
     return carrito.reduce((total, item) => {
@@ -29,7 +41,6 @@ export const NavigateApp = () => {
     navigate("/inicio", { replace: true });
   };
 
-  // 👇 Popover resumen carrito
   const popover = (
     <Popover id="popover-carrito" className="shadow">
       <Popover.Header as="h3">Carrito</Popover.Header>
@@ -70,9 +81,15 @@ export const NavigateApp = () => {
         <Navbar.Collapse id="navbar-nav">
           <Nav className="me-auto">
             <NavDropdown title="Categorías" id="nav-dropdown">
-              <NavDropdown.Item as={NavLink} to="/categoria/calzado">Calzado</NavDropdown.Item>
-              <NavDropdown.Item as={NavLink} to="/categoria/indumentaria">Indumentaria</NavDropdown.Item>
-              <NavDropdown.Item as={NavLink} to="/categoria/accesorios">Accesorios</NavDropdown.Item>
+              {categorias.map((cat) => (
+                <NavDropdown.Item
+                  key={cat._id}
+                  as={NavLink}
+                  to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
+                >
+                  {cat.nombre}
+                </NavDropdown.Item>
+              ))}
             </NavDropdown>
 
             <Nav.Link as={NavLink} to="/Nosotros">Nosotros</Nav.Link>
@@ -81,7 +98,6 @@ export const NavigateApp = () => {
           </Nav>
 
           <div className="d-flex align-items-center gap-3">
-            {/* Carrito con popover */}
             <OverlayTrigger trigger={["hover", "focus"]} placement="bottom" overlay={popover}>
               <Nav.Link as={NavLink} to="/carrito" className="position-relative">
                 <BsCart size={22} />
@@ -119,6 +135,7 @@ export const NavigateApp = () => {
 };
 
 export default NavigateApp;
+
 
 
 

@@ -11,7 +11,7 @@ import {
   Alert,
   Badge
 } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CarritoContext } from '../context/CarritoContext';
 import ListaConsultas from '../components/ListaConsultas';
 
@@ -20,7 +20,9 @@ import ImagenPrincipal from '../components/carrusel/ImagenPrincipal';
 import PagoMercadoPago from '../components/PagoMercadoPago';
 
 function DetalleProducto() {
-  const { id } = useParams();
+  const { id } = useParams(); // 👈 siempre recibimos el _id del producto
+  const navigate = useNavigate();
+
   const [producto, setProducto] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -184,6 +186,7 @@ function DetalleProducto() {
       alert('Error al enviar consulta');
     }
   };
+
 
 
   return (
