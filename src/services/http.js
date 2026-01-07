@@ -11,7 +11,7 @@ function withToken(headers = {}) {
   return {
     ...DEFAULT_HEADERS,
     ...headers,
-    "x-token": token || "" // si no hay token, se envía vacío
+    "x-token": token || "" // 👈 tu proyecto usa x-token en todos los endpoints
   };
 }
 
@@ -35,7 +35,8 @@ export async function httpGet(path) {
   const url = buildUrl(path);
   const res = await fetch(url, {
     method: "GET",
-    headers: withToken()
+    headers: withToken(),
+    credentials: "include", // 👈 si usás cookies/sesiones
   });
   return handleResponse(res, url);
 }
@@ -45,7 +46,8 @@ export async function httpPost(path, data) {
   const res = await fetch(url, {
     method: "POST",
     headers: withToken(),
-    body: JSON.stringify(data)
+    credentials: "include",
+    body: JSON.stringify(data),
   });
   return handleResponse(res, url);
 }
@@ -55,7 +57,8 @@ export async function httpPut(path, data) {
   const res = await fetch(url, {
     method: "PUT",
     headers: withToken(),
-    body: JSON.stringify(data)
+    credentials: "include",
+    body: JSON.stringify(data),
   });
   return handleResponse(res, url);
 }
@@ -64,7 +67,8 @@ export async function httpDelete(path) {
   const url = buildUrl(path);
   const res = await fetch(url, {
     method: "DELETE",
-    headers: withToken()
+    headers: withToken(),
+    credentials: "include",
   });
   return handleResponse(res, url);
 }

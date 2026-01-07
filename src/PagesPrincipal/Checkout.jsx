@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
 export default function Checkout() {
   const { compraId } = useParams();
   const [preferenceId, setPreferenceId] = useState(null);
@@ -12,7 +14,7 @@ export default function Checkout() {
     const crearPreferencia = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:3000/api/pagos/crear/${compraId}`, {
+        const res = await fetch(`${API_URL}/pagos/crear/${compraId}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -21,8 +23,8 @@ export default function Checkout() {
         });
         const data = await res.json();
         if (data.ok) {
-          setPreferenceId(data.id);        // ID de la preferencia
-          setMontoTotal(data.amount || 0); // totalFinal que devuelve tu backend
+          setPreferenceId(data.id);
+          setMontoTotal(data.amount || 0);
         }
       } catch (error) {
         console.error("❌ Error creando preferencia:", error);
@@ -35,7 +37,10 @@ export default function Checkout() {
   useEffect(() => {
     if (!preferenceId || !montoTotal) return;
 
-    const mp = new window.MercadoPago(process.env.REACT_APP_MP_PUBLIC_KEY, {
+    // limpiar contenedor
+    document.getElementById("card-payment-container").innerHTML = "";
+
+    const mp = new window.MercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, {
       locale: "es-AR",
     });
 
@@ -47,9 +52,12 @@ export default function Checkout() {
       callbacks: {
         onSubmit: async (cardFormData) => {
           try {
-            const res = await fetch("http://localhost:3000/api/pagos/procesar", {
+            const res = await fetch(`${API_URL}/pagos/procesar`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                "x-token": localStorage.getItem("token"),
+              },
               body: JSON.stringify({ compraId, amount: montoTotal, cardFormData }),
             });
             const data = await res.json();
