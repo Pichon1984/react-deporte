@@ -16,10 +16,11 @@ const ProductoModal = ({ show, onHide, producto, onGuardar }) => {
             // ✅ aseguramos que se envíe el _id de la categoría
             const productoFinal = {
               ...nuevo,
-              categoria: nuevo.categoria, // aquí ya es el _id seleccionado en el <Form.Select>
+              categoria: nuevo.categoria, // ya es el _id seleccionado en el <Form.Select>
             };
             onGuardar(productoFinal);
-            onHide();
+            // ❌ no cerramos aquí el modal
+            // ✅ dejamos que Admin.jsx lo cierre cuando el guardado sea exitoso
           }}
           onCancelar={onHide}
         />
@@ -29,8 +30,3 @@ const ProductoModal = ({ show, onHide, producto, onGuardar }) => {
 };
 
 export default ProductoModal;
-
-
-
-
-

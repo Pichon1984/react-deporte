@@ -135,24 +135,39 @@ function DetalleProducto() {
       : producto.descripcion;
 
   const handleAgregar = () => {
-    if (producto.talles?.length && !talleSeleccionado) {
-      alert('Seleccioná un talle');
-      return;
-    }
-    if (cantidad < 1 || cantidad > (producto.stock || 0)) {
-      alert(`Solo hay ${producto.stock} unidad(es) disponible(s)`);
-      return;
-    }
-    if (producto.envio?.metodos?.length > 0 && !envioSeleccionado) {
-      alert('Seleccioná un método de envío');
-      return;
-    }
+  // Validar talle si el producto tiene talles
+  if (producto.tallesUnidades?.length > 0 && !talleSeleccionado) {
+    alert("Seleccioná un talle antes de agregar al carrito");
+    return;
+  }
 
-    agregarProducto(producto, talleSeleccionado || 'único', cantidad, envioSeleccionado);
+  // Determinar stock disponible según talle o stock general
+  const stockDisponible = talleSeleccionado?.stock ?? producto.stock ?? 0;
 
-    setMostrarToast(true);
-    setTimeout(() => setMostrarToast(false), 3000);
-  };
+  if (cantidad < 1 || cantidad > stockDisponible) {
+    alert(`Solo hay ${stockDisponible} unidad(es) disponible(s)`);
+    return;
+  }
+
+  // Validar método de envío si corresponde
+  if (producto.envio?.metodos?.length > 0 && !envioSeleccionado) {
+    alert("Seleccioná un método de envío");
+    return;
+  }
+
+  // Agregar al carrito con el talle correcto
+  agregarProducto(
+    producto,
+    talleSeleccionado?.talle || "único", // 👈 usamos el campo `talle` del backend
+    cantidad,
+    envioSeleccionado
+  );
+
+  // Mostrar confirmación
+  setMostrarToast(true);
+  setTimeout(() => setMostrarToast(false), 3000);
+};
+
 
   const handleEnviarConsulta = async () => {
     const token = localStorage.getItem('token');
@@ -231,24 +246,26 @@ function DetalleProducto() {
           )}
 
           {/* Talles */}
-          {producto.talles?.length > 0 && (
+          {producto.tallesUnidades?.length > 0 && (
             <div className="mt-3">
               <h5>Talles disponibles</h5>
               <div className="d-flex flex-wrap gap-2">
-                {producto.talles.map((talle, idx) => (
+                {producto.tallesUnidades.map((talle, idx) => (
                   <Button
                     key={idx}
-                    variant={talleSeleccionado === talle ? 'primary' : 'outline-secondary'}
-                    onClick={() => setTalleSeleccionado(talle)}
-                    style={{ minWidth: '60px' }}
-                    disabled={(producto.stock || 0) === 0}
+                    variant={talleSeleccionado?.talle === talle.talle ? 'primary' : 'outline-secondary'}
+                    onClick={() => setTalleSeleccionado(talle)} // guarda el objeto completo
+                    style={{ minWidth: '80px' }}
+                    disabled={talle.stock <= 0}
                   >
-                    {talle}
+                    {talle.talle} ({talle.stock})
                   </Button>
                 ))}
               </div>
             </div>
           )}
+
+
 
           <div className="mt-3">
             <h5>Cantidad</h5>
