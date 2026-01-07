@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, [token]); // 👈 ahora depende de token, no solo al montar
+  }, [token]); // 👈 se ejecuta al montar y cada vez que cambia el token
 
   // 👉 Login: guardar token y usuario
   const logIn = (usuarioData, token) => {
