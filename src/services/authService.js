@@ -55,10 +55,12 @@ export async function forgotPassword(email) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ correo: email }),
+    body: JSON.stringify({ correo: email }), // 👈 importante: backend espera "correo"
   });
   return handleResponse(res);
 }
+
+
 
 // Reset password
 export async function resetPassword(token, newPassword) {

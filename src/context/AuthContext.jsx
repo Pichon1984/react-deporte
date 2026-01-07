@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
-  // 🔄 Rehidratar sesión al montar
+  // 🔄 Rehidratar sesión al montar o cuando cambia el token
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (!storedToken) {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, []); // 👈 solo al montar, no depende de navigate
+  }, [token]); // 👈 ahora depende de token, no solo al montar
 
   // 👉 Login: guardar token y usuario
   const logIn = (usuarioData, token) => {
@@ -104,3 +104,4 @@ export const AuthProvider = ({ children }) => {
 
 // 👇 Hook personalizado
 export const useAuth = () => useContext(AuthContext);
+

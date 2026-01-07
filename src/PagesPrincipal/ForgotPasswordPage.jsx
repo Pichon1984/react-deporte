@@ -25,14 +25,14 @@ const ForgotPasswordPage = () => {
       const resp = await forgotPassword(email);
       console.log("🔍 Respuesta backend forgotPassword:", resp);
 
-      if (resp && resp.link) {
+      if (resp.ok && resp.data?.link) {
         // 👉 Usar el link armado en backend (con FRONTEND_URL)
         const result = await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_TEMPLATE_ID_RESET,
           {
             to_email: email,
-            recovery_link: resp.link,
+            recovery_link: resp.data.link,
           }
         );
 
@@ -40,7 +40,7 @@ const ForgotPasswordPage = () => {
         setMensaje("Correo de recuperación enviado correctamente ✅");
       } else {
         setError(
-          resp?.msg ||
+          resp.data?.msg ||
             "No se pudo generar el enlace de recuperación. Revisa tu configuración."
         );
       }
