@@ -30,8 +30,8 @@ function getHeaders(token) {
 
 // --- Endpoints de Productos ---
 export async function getProductos(categoriaId, page = 1, limit = 12) {
-  // ✅ Siempre usamos la ruta por _id
-  const url = `${API_URL}/api/categorias/id/${categoriaId}/productos?page=${page}&limit=${limit}`;
+  // ✅ Ruta correcta: /api/categorias/:id/productos
+  const url = `${API_URL}/api/categorias/${categoriaId}/productos?page=${page}&limit=${limit}`;
   const res = await fetch(url);
   return handleResponse(res);
 }
@@ -66,8 +66,10 @@ export async function login(correo, password) {
   return handleResponse(res);
 }
 
+// --- Perfil del usuario autenticado ---
 export async function getProfile(token) {
-  const res = await fetch(`${API_URL}/api/auth/me`, {
+  // ✅ Tu backend expone /api/usuarios/me
+  const res = await fetch(`${API_URL}/api/usuarios/me`, {
     headers: getHeaders(token),
   });
   return handleResponse(res);
