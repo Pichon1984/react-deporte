@@ -37,37 +37,50 @@ const Admin = () => {
   }, []);
 
   // ✅ Guardar producto (nuevo o edición)
-  const handleGuardar = async (producto) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      let res;
-      if (producto._id) {
-        res = await fetch(`${API_URL}/api/productos/${producto._id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", "x-token": token },
-          body: JSON.stringify(producto),
-        });
-      } else {
-        res = await fetch(`${API_URL}/api/productos`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-token": token },
-          body: JSON.stringify(producto),
-        });
-      }
-      const data = await res.json();
-      const productoGuardado = data.producto || data;
-      setProductos((prev) =>
-        producto._id
-          ? prev.map((p) => (p._id === producto._id ? productoGuardado : p))
-          : [...prev, productoGuardado]
-      );
-      setShowModal(false);
-      setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
-    } catch (error) {
-      setMensaje({ tipo: "danger", texto: "Error guardando producto" });
+const handleGuardar = async (producto) => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  try {
+    let res;
+    if (producto._id) {
+      // EDITAR
+      res = await fetch(`${API_URL}/api/productos/${producto._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-token": token },
+        body: JSON.stringify(producto),
+      });
+    } else {
+      // CREAR
+      res = await fetch(`${API_URL}/api/productos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-token": token },
+        body: JSON.stringify(producto),
+      });
     }
-  };
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Error en la operación");
+    }
+
+    const productoGuardado = data.producto || data;
+
+    setProductos((prev) =>
+      producto._id
+        ? prev.map((p) => (p._id === producto._id ? productoGuardado : p))
+        : [...prev, productoGuardado]
+    );
+
+    // ✅ Solo cerramos el modal si todo salió bien
+    setShowModal(false);
+    setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
+  } catch (error) {
+    console.error("❌ Error guardando producto:", error);
+    // ❌ No cerramos el modal si hay error
+    setMensaje({ tipo: "danger", texto: error.message || "Error guardando producto" });
+  }
+};
+
 
   // ✅ Eliminar producto
   const handleEliminar = async (id) => {
@@ -79,11 +92,13 @@ const Admin = () => {
         method: "DELETE",
         headers: { "x-token": token }
       });
-      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
       setProductos((prev) => prev.filter((p) => p._id !== id));
       setMensaje({ tipo: "success", texto: "Producto eliminado correctamente" });
     } catch (error) {
-      setMensaje({ tipo: "danger", texto: "Error eliminando producto" });
+      console.error("❌ Error eliminando producto:", error);
+      setMensaje({ tipo: "danger", texto: error.message || "Error eliminando producto" });
     }
   };
 

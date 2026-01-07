@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Form, Button, Row, Col, Image, Spinner } from 'react-bootstrap';
+import { Form, Button, Row, Col, Image, Spinner, Table } from 'react-bootstrap';
 
 const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
   const [producto, setProducto] = useState({
@@ -10,12 +10,32 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
     descripcion: '',
     tallesTexto: '',
     imagenes: [],
-    ...productoInicial, // 👈 si viene un producto para editar, se carga aquí
+    // nuevo: unidades por talle [{talle:'S', stock:10}]
+    tallesUnidades: [],
+    ...productoInicial,
   });
 
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [urlTemporal, setUrlTemporal] = useState('');
+
+  // 📌 Normalizar datos cuando llega productoInicial (para edición)
+  useEffect(() => {
+    if (productoInicial && productoInicial._id) {
+      setProducto({
+        ...productoInicial,
+        precio: productoInicial.precio?.toString() || "",
+        tallesTexto:
+          Array.isArray(productoInicial.talles) && productoInicial.talles.length > 0
+            ? productoInicial.talles.join(", ")
+            : productoInicial.tallesTexto || "",
+        imagenes: productoInicial.imagenes || [],
+        tallesUnidades: Array.isArray(productoInicial.tallesUnidades)
+          ? productoInicial.tallesUnidades
+          : [], // si no existe, iniciamos vacío
+      });
+    }
+  }, [productoInicial]);
 
   // 📥 Traer categorías desde backend
   useEffect(() => {
@@ -23,7 +43,6 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categorias`);
         const data = await res.json();
-        // si tu backend devuelve { categorias: [...] }
         setCategorias(data.categorias || data);
       } catch (err) {
         console.error("Error cargando categorías:", err);
@@ -34,7 +53,40 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProducto(prev => ({ ...prev, [name]: value }));
+
+    if (name === "precio") {
+      // normalizamos: quitamos puntos de miles y usamos punto como decimal
+      const valorNormalizado = value.replace(/\./g, "").replace(",", ".");
+      setProducto(prev => ({ ...prev, precio: valorNormalizado }));
+    } else {
+      setProducto(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // 🧮 Helpers de talles/unidades
+  const agregarFilaTalle = () => {
+    setProducto(prev => ({
+      ...prev,
+      tallesUnidades: [...(prev.tallesUnidades || []), { talle: '', stock: 0 }],
+    }));
+  };
+
+  const cambiarFilaTalle = (index, campo, valor) => {
+    setProducto(prev => {
+      const copia = [...(prev.tallesUnidades || [])];
+      copia[index] = {
+        ...copia[index],
+        [campo]: campo === 'stock' ? Number(valor) || 0 : valor,
+      };
+      return { ...prev, tallesUnidades: copia };
+    });
+  };
+
+  const eliminarFilaTalle = (index) => {
+    setProducto(prev => ({
+      ...prev,
+      tallesUnidades: (prev.tallesUnidades || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleGuardar = () => {
@@ -42,7 +94,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
       alert('Campos obligatorios: nombre, precio, categoría');
       return;
     }
-    if (isNaN(Number(producto.precio)) || Number(producto.precio) <= 0) {
+    if (isNaN(parseFloat(producto.precio)) || parseFloat(producto.precio) <= 0) {
       alert('El precio debe ser un número válido mayor a 0.');
       return;
     }
@@ -51,23 +103,41 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
       return;
     }
 
-    const talles = producto.tallesTexto
+    // talles desde texto (para compatibilidad) y consolidación con tallesUnidades
+    const tallesDesdeTexto = producto.tallesTexto
       ? producto.tallesTexto.split(',').map(t => t.trim()).filter(Boolean)
-      : producto.talles || [];
+      : [];
+
+    // si hay tallesUnidades, derivamos talles únicos desde ahí
+    const tallesDesdeUnidades = (producto.tallesUnidades || [])
+      .map(tu => tu.talle?.trim())
+      .filter(Boolean);
+
+    const tallesUnicos = Array.from(new Set([...(tallesDesdeTexto || []), ...(tallesDesdeUnidades || [])]));
+
+    // stock total (opcional): suma de unidades por talle si existen, sino el campo stock general
+    const stockTotal =
+      (producto.tallesUnidades || []).length > 0
+        ? (producto.tallesUnidades || []).reduce((acc, tu) => acc + (Number(tu.stock) || 0), 0)
+        : Number(producto.stock) || 0;
 
     const nuevoProducto = {
       ...producto,
-      categoria: producto.categoria, // 👈 aquí ya es el _id seleccionado
-      talles,
+      categoria: producto.categoria,
+      talles: tallesUnicos,
+      tallesUnidades: (producto.tallesUnidades || []).map(tu => ({
+        talle: (tu.talle || '').trim(),
+        stock: Number(tu.stock) || 0,
+      })),
+      // precio normalizado a número con 2 decimales
+      precio: Number(parseFloat(producto.precio).toFixed(2)),
+      // stock total (si tu modelo lo usa como agregado)
+      stock: Number(stockTotal),
       fechaCreacion: producto.fechaCreacion || new Date().toISOString(),
     };
 
-    console.log("Categoría seleccionada (ID):", producto.categoria);
-    console.log("Producto a guardar:", nuevoProducto);
-
     onGuardar(nuevoProducto);
 
-    // reset form solo si es creación, no edición
     if (!productoInicial._id) {
       setProducto({
         nombre: '',
@@ -77,6 +147,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
         descripcion: '',
         tallesTexto: '',
         imagenes: [],
+        tallesUnidades: [],
       });
       setUrlTemporal('');
     }
@@ -161,9 +232,10 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
             <Form.Label>Precio</Form.Label>
             <Form.Control
               name="precio"
-              type="number"
+              type="text"
               value={producto.precio}
               onChange={handleChange}
+              placeholder="Ej: 120000"
             />
           </Form.Group>
 
@@ -185,12 +257,13 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Stock</Form.Label>
+            <Form.Label>Stock general (opcional)</Form.Label>
             <Form.Control
               name="stock"
               type="number"
               value={producto.stock}
               onChange={handleChange}
+              placeholder="Se calcula desde talles si los cargas"
             />
           </Form.Group>
         </Col>
@@ -213,7 +286,59 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
               name="tallesTexto"
               value={producto.tallesTexto}
               onChange={handleChange}
+              placeholder="Ej: S, M, L, 38, 39"
             />
+          </Form.Group>
+
+          {/* 🧩 Unidades por talle */}
+          <Form.Group className="mb-3">
+            <Form.Label>Unidades por talle</Form.Label>
+            <Table bordered size="sm">
+              <thead>
+                <tr>
+                  <th>Talle</th>
+                  <th>Unidades</th>
+                  <th style={{ width: 100 }}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(producto.tallesUnidades || []).map((tu, i) => (
+                  <tr key={i}>
+                    <td>
+                      <Form.Control
+                        value={tu.talle}
+                        onChange={(e) => cambiarFilaTalle(i, 'talle', e.target.value)}
+                        placeholder="Ej: S, M, 38"
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        value={tu.stock}
+                        onChange={(e) => cambiarFilaTalle(i, 'stock', e.target.value)}
+                        min={0}
+                      />
+                    </td>
+                    <td>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => eliminarFilaTalle(i)}
+                      >
+                        Eliminar
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={3}>
+                    <Button variant="outline-primary" size="sm" onClick={agregarFilaTalle}>
+                      + Agregar talle
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -273,5 +398,3 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
 };
 
 export default ProductoForm;
-
-

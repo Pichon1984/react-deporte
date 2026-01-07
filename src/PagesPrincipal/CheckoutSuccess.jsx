@@ -62,7 +62,7 @@ export function CheckoutSuccess() {
   };
 
   return (
-    <div className="checkout-success">
+    <div className="checkout-success" style={{ padding: "2rem" }}>
       {renderEstado()}
       <p><strong>Compra ID:</strong> {compra._id}</p>
       <p><strong>Total productos:</strong> ${total.toLocaleString("es-AR")}</p>

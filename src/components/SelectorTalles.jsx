@@ -11,10 +11,11 @@ const SelectorTalles = ({ talles = [], talleSeleccionado, onChange }) => {
           key={idx}
           type="radio"
           name="talle"
-          label={talle}
-          value={talle}
-          checked={talleSeleccionado === talle}
-          onChange={(e) => onChange(e.target.value)}
+          label={`${talle.nombre} (Unidades: ${talle.stock})`}
+          value={talle.nombre}
+          checked={talleSeleccionado?.nombre === talle.nombre}
+          onChange={() => onChange(talle)} // 👈 guarda el objeto completo (nombre + stock)
+          disabled={talle.stock <= 0} // 👈 deshabilita si no hay stock
         />
       ))}
     </div>
@@ -22,3 +23,4 @@ const SelectorTalles = ({ talles = [], talleSeleccionado, onChange }) => {
 };
 
 export default SelectorTalles;
+
