@@ -7,9 +7,10 @@ const PagoMercadoPago = ({ preferenceId, amount }) => {
   useEffect(() => {
     if (!preferenceId || !amount) return;
 
-    const mp = new window.MercadoPago(process.env.REACT_APP_MP_PUBLIC_KEY, {
-      locale: "es-AR",
-    });
+    const mp = new window.MercadoPago(
+      process.env.REACT_APP_MP_PUBLIC_KEY, // o import.meta.env.VITE_MP_PUBLIC_KEY si usás Vite
+      { locale: "es-AR" }
+    );
 
     mp.bricks().create("cardPayment", "card-payment-container", {
       initialization: {
@@ -25,23 +26,26 @@ const PagoMercadoPago = ({ preferenceId, amount }) => {
       callbacks: {
         onSubmit: async (cardFormData) => {
           try {
-            // Enviamos los datos del pago al backend para procesar
-            const res = await fetch("http://localhost:3000/api/pagos/procesar", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                preferenceId,
-                amount,
-                cardFormData,
-              }),
-            });
+            // Usar variable de entorno para el backend
+            const res = await fetch(
+              `${process.env.REACT_APP_API_URL}/pagos/procesar`, // 👈 configurable
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  preferenceId,
+                  amount,
+                  cardFormData,
+                }),
+              }
+            );
 
             const data = await res.json();
             console.log("Respuesta del backend:", data);
 
             if (data.ok && data.compraId) {
-              // Redirigimos al CheckoutSuccess con el ID real de la compra
-              navigate(`/checkout-success/${data.compraId}`);
+              // Redirigir a la ruta correcta
+              navigate(`/checkout/success/${data.compraId}`);
             } else {
               alert("Error procesando el pago");
             }
