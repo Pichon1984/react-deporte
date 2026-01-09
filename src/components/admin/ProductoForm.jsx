@@ -280,15 +280,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Talles (separados por coma)</Form.Label>
-            <Form.Control
-              name="tallesTexto"
-              value={producto.tallesTexto}
-              onChange={handleChange}
-              placeholder="Ej: S, M, L, 38, 39"
-            />
-          </Form.Group>
+         
 
           {/* 🧩 Unidades por talle */}
           <Form.Group className="mb-3">
