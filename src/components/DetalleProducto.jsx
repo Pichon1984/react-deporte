@@ -19,8 +19,11 @@ import MiniaturasCarrusel from '../components/carrusel/MiniaturasCarrusel';
 import ImagenPrincipal from '../components/carrusel/ImagenPrincipal';
 import PagoMercadoPago from '../components/PagoMercadoPago';
 
+// 👇 Importá tu API_URL desde el cliente centralizado
+import { API_URL } from '../services/api';
+
 function DetalleProducto() {
-  const { id } = useParams(); // 👈 siempre recibimos el _id del producto
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [producto, setProducto] = useState(null);
@@ -45,14 +48,13 @@ function DetalleProducto() {
 
   const [preferenceId, setPreferenceId] = useState(null);
 
-  // Calcular monto total de forma segura
   const montoTotal = ((producto?.precio || 0) * cantidad) + (envioAndreani?.costo || 0);
 
   // Cargar producto
   useEffect(() => {
     const fetchProducto = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/productos/${id}`);
+        const res = await fetch(`${API_URL}/api/productos/${id}`);
         const data = await res.json();
         setProducto(data.producto || data);
       } catch (error) {
@@ -67,7 +69,7 @@ function DetalleProducto() {
     const fetchEnvioAndreani = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/envios/andreani?origen=1000&destino=4000&peso=${producto?.peso || 1}`
+          `${API_URL}/api/envios/andreani?origen=1000&destino=4000&peso=${producto?.peso || 1}`
         );
         const data = await res.json();
         setEnvioAndreani(data);
@@ -86,7 +88,7 @@ function DetalleProducto() {
         const resultados = await Promise.all(
           metodos.map(async (metodo) => {
             const res = await fetch(
-              `http://localhost:3000/api/cuotas?amount=${producto.precio}&payment_method_id=${metodo}`
+              `${API_URL}/api/cuotas?amount=${producto.precio}&payment_method_id=${metodo}`
             );
             const data = await res.json();
             return {
@@ -108,7 +110,7 @@ function DetalleProducto() {
   useEffect(() => {
     const crearPreferencia = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/pagos/crear/${id}`, {
+        const res = await fetch(`${API_URL}/api/pagos/crear/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -135,39 +137,33 @@ function DetalleProducto() {
       : producto.descripcion;
 
   const handleAgregar = () => {
-  // Validar talle si el producto tiene talles
-  if (producto.tallesUnidades?.length > 0 && !talleSeleccionado) {
-    alert("Seleccioná un talle antes de agregar al carrito");
-    return;
-  }
+    if (producto.tallesUnidades?.length > 0 && !talleSeleccionado) {
+      alert("Seleccioná un talle antes de agregar al carrito");
+      return;
+    }
 
-  // Determinar stock disponible según talle o stock general
-  const stockDisponible = talleSeleccionado?.stock ?? producto.stock ?? 0;
+    const stockDisponible = talleSeleccionado?.stock ?? producto.stock ?? 0;
 
-  if (cantidad < 1 || cantidad > stockDisponible) {
-    alert(`Solo hay ${stockDisponible} unidad(es) disponible(s)`);
-    return;
-  }
+    if (cantidad < 1 || cantidad > stockDisponible) {
+      alert(`Solo hay ${stockDisponible} unidad(es) disponible(s)`);
+      return;
+    }
 
-  // Validar método de envío si corresponde
-  if (producto.envio?.metodos?.length > 0 && !envioSeleccionado) {
-    alert("Seleccioná un método de envío");
-    return;
-  }
+    if (producto.envio?.metodos?.length > 0 && !envioSeleccionado) {
+      alert("Seleccioná un método de envío");
+      return;
+    }
 
-  // Agregar al carrito con el talle correcto
-  agregarProducto(
-    producto,
-    talleSeleccionado?.talle || "único", // 👈 usamos el campo `talle` del backend
-    cantidad,
-    envioSeleccionado
-  );
+    agregarProducto(
+      producto,
+      talleSeleccionado?.talle || "único",
+      cantidad,
+      envioSeleccionado
+    );
 
-  // Mostrar confirmación
-  setMostrarToast(true);
-  setTimeout(() => setMostrarToast(false), 3000);
-};
-
+    setMostrarToast(true);
+    setTimeout(() => setMostrarToast(false), 3000);
+  };
 
   const handleEnviarConsulta = async () => {
     const token = localStorage.getItem('token');
@@ -177,7 +173,7 @@ function DetalleProducto() {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/consultas', {
+      const res = await fetch(`${API_URL}/api/consultas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,8 +197,6 @@ function DetalleProducto() {
       alert('Error al enviar consulta');
     }
   };
-
-
 
   return (
     <Container className="py-5">
