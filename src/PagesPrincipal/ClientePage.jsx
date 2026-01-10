@@ -1,31 +1,60 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import EditarPerfilModal from "../components/EditarPerfilModal";
+
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 const ClientePage = () => {
   const { usuario, cargando } = useContext(AuthContext);
   const [misCompras, setMisCompras] = useState([]);
+  const [datosCliente, setDatosCliente] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (cargando) return;
     if (!usuario || usuario.rol !== "CLIENTE") {
-      navigate("/cuenta"); 
+      navigate("/cuenta");
       return;
     }
+
+    const cargarDatosCliente = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const resp = await fetch(`${API_URL}/api/usuarios/me`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(import.meta.env.MODE !== "production" && token
+              ? { "x-token": token }
+              : {}),
+          },
+          credentials: "include",
+        });
+
+        const data = await resp.json();
+        if (resp.ok && data.usuario) {
+          setDatosCliente(data.usuario);
+        }
+      } catch (error) {
+        console.error("Error cargando datos del cliente:", error);
+      }
+    };
 
     const cargarCompras = async () => {
       try {
         const token = localStorage.getItem("token");
-        const resp = await fetch("http://localhost:3000/api/compras/mias", {
+        const resp = await fetch(`${API_URL}/api/compras/mias`, {
           headers: {
             "Content-Type": "application/json",
-            "x-token": token,
+            ...(import.meta.env.MODE !== "production" && token
+              ? { "x-token": token }
+              : {}),
           },
+          credentials: "include",
         });
 
         const data = await resp.json();
-
         if (resp.ok && data.ok) {
           setMisCompras(data.compras || []);
         } else {
@@ -37,22 +66,25 @@ const ClientePage = () => {
       }
     };
 
+    cargarDatosCliente();
     cargarCompras();
   }, [usuario, cargando, navigate]);
 
   const iniciarPago = async (compraId) => {
     try {
       const token = localStorage.getItem("token");
-      const resp = await fetch(`http://localhost:3000/api/pagos/crear/${compraId}`, {
+      const resp = await fetch(`${API_URL}/api/pagos/crear/${compraId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-token": token,
+          ...(import.meta.env.MODE !== "production" && token
+            ? { "x-token": token }
+            : {}),
         },
+        credentials: "include",
       });
 
       const data = await resp.json();
-
       if (resp.ok && data.init_point) {
         window.location.href = data.init_point;
       } else {
@@ -66,7 +98,6 @@ const ClientePage = () => {
 
   if (cargando) return <p className="text-center mt-5">Cargando...</p>;
 
-  // 🔑 Función segura para formatear fechas
   const formatDate = (dateString) => {
     if (!dateString) return "Sin fecha";
     const fecha = new Date(dateString);
@@ -89,17 +120,25 @@ const ClientePage = () => {
           <h4 className="card-title">📋 Mis datos</h4>
           <div className="row">
             <div className="col-md-6">
-              <p><strong>DNI:</strong> {usuario?.dni}</p>
-              <p><strong>Teléfono:</strong> {usuario?.telefono}</p>
-              <p><strong>Correo:</strong> {usuario?.correo}</p>
+              <p><strong>Nombre:</strong> {datosCliente?.nombre}</p>
+              <p><strong>Apellido:</strong> {datosCliente?.apellido}</p>
+              <p><strong>DNI:</strong> {datosCliente?.dni}</p>
+              <p><strong>Teléfono:</strong> {datosCliente?.telefono}</p>
+              <p><strong>Correo:</strong> {datosCliente?.correo}</p>
             </div>
             <div className="col-md-6">
-              <p><strong>Dirección:</strong> {usuario?.direccion}</p>
-              <p><strong>Provincia:</strong> {usuario?.provincia}</p>
-              <p><strong>Localidad:</strong> {usuario?.localidad}</p>
-              <p><strong>Código Postal:</strong> {usuario?.codigoPostal}</p>
+              <p><strong>Dirección:</strong> {datosCliente?.direccion}</p>
+              <p><strong>Provincia:</strong> {datosCliente?.provincia}</p>
+              <p><strong>Localidad:</strong> {datosCliente?.localidad}</p>
+              <p><strong>Código Postal:</strong> {datosCliente?.codigoPostal}</p>
             </div>
           </div>
+          <button
+            className="btn btn-warning mt-3"
+            onClick={() => setShowModal(true)}
+          >
+            ✏️ Editar Perfil
+          </button>
         </div>
       </div>
 
@@ -136,8 +175,6 @@ const ClientePage = () => {
                       <p className="mb-1">
                         <strong>Estado envío:</strong> {compra.estadoEnvio}
                       </p>
-
-                      {/* 📅 Fechas de envío y entrega */}
                       <p className="mb-1">
                         <strong>Fecha envío:</strong> {formatDate(compra.fechaEnvio)}
                       </p>
@@ -145,7 +182,6 @@ const ClientePage = () => {
                         <strong>Fecha entrega:</strong> {formatDate(compra.fechaEntrega)}
                       </p>
 
-                      {/* Botón de pago solo si está pendiente */}
                       {compra.estado === "pendiente" && (
                         <button
                           className="btn btn-primary btn-sm mb-2"
@@ -173,9 +209,16 @@ const ClientePage = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de edición */}
+      <EditarPerfilModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        datosCliente={datosCliente}
+        onPerfilActualizado={(nuevoPerfil) => setDatosCliente(nuevoPerfil)}
+      />
     </div>
   );
 };
 
 export default ClientePage;
-
