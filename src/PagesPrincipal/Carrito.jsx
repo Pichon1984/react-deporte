@@ -3,6 +3,9 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { CarritoContext } from "../context/CarritoContext";
 import { BsTrash } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // 👈 importar el hook
+
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 const CarritoPage = () => {
   const {
@@ -13,6 +16,7 @@ const CarritoPage = () => {
     eliminarProductoTotal
   } = useContext(CarritoContext);
 
+  const { usuario, token, cargando } = useAuth(); // 👈 usar el contexto
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -37,16 +41,19 @@ const CarritoPage = () => {
   async function confirmarCarrito() {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
-      if (!token) {
+      if (!usuario) {
         // 🚨 Si no está logeado → redirigir al login y volver al carrito después
         localStorage.setItem("redirectAfterLogin", "/carrito");
         navigate("/cuenta");
         return;
       }
 
-      const headers = { "Content-Type": "application/json", "x-token": token };
+      const headers =
+        import.meta.env.MODE === "production"
+          ? { "Content-Type": "application/json" }
+          : { "Content-Type": "application/json", "x-token": token };
+
       const productos = carrito.map(item => ({
         productoId: item.productoId._id,
         nombre: item.productoId.nombre,
@@ -59,21 +66,23 @@ const CarritoPage = () => {
       const costoEnvio = calcularEnvio(subtotal);
       const totalFinal = subtotal + costoEnvio;
 
-      const envio = { metodo: "domicilio", nombre: "Cliente", email: "cliente@cliente.com" };
+      const envio = { metodo: "domicilio", nombre: usuario.nombre, email: usuario.correo };
 
       // 1️⃣ Crear Orden
-      const ordenRes = await fetch("/api/ordenes/checkout", {
+      const ordenRes = await fetch(`${API_URL}/api/ordenes/checkout`, {
         method: "POST",
         headers,
+        credentials: "include",
         body: JSON.stringify({ productos, envio })
       });
       const ordenData = await ordenRes.json();
       if (!ordenRes.ok || !ordenData.ordenId) return;
 
       // 2️⃣ Crear Compra
-      const compraRes = await fetch("/api/compras", {
+      const compraRes = await fetch(`${API_URL}/api/compras`, {
         method: "POST",
         headers,
+        credentials: "include",
         body: JSON.stringify({
           ordenId: ordenData.ordenId,
           productos,
@@ -85,7 +94,6 @@ const CarritoPage = () => {
       const compraData = await compraRes.json();
 
       if (compraRes.ok && compraData.compra?._id) {
-        // 👉 Redirige al checkout embebido con Brick
         navigate(`/checkout/${compraData.compra._id}`);
       }
     } catch (err) {
@@ -97,9 +105,14 @@ const CarritoPage = () => {
 
   if (carrito.length === 0) {
     return (
-      <Container className="py-5 text-center d-flex flex-column justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+      <Container
+        className="py-5 text-center d-flex flex-column justify-content-center align-items-center"
+        style={{ minHeight: "60vh" }}
+      >
         <h2 className="display-5 fw-light text-dark mb-2">¡Oh no! Tu carrito está vacío.</h2>
-        <p className="lead text-muted mb-4">Parece que aún no has encontrado el equipo perfecto. ¡Echa un vistazo a nuestros productos destacados!</p>
+        <p className="lead text-muted mb-4">
+          Parece que aún no has encontrado el equipo perfecto. ¡Echa un vistazo a nuestros productos destacados!
+        </p>
         <Button variant="primary" size="lg" href="/inicio" className="mt-3 shadow-sm">
           Volver a la Página Principal
         </Button>
@@ -115,7 +128,12 @@ const CarritoPage = () => {
         <Row key={index} className="align-items-center mb-4 border-bottom pb-3">
           <Col xs={4} md={2}>
             <Image
-              src={item.productoId?.imagenes?.[0] || item.productoId?.img || item.productoId?.imagen || "/assets/img/default.png"}
+              src={
+                item.productoId?.imagenes?.[0] ||
+                item.productoId?.img ||
+                item.productoId?.imagen ||
+                "/assets/img/default.png"
+              }
               alt={item.productoId?.nombre}
               fluid
               rounded
@@ -133,11 +151,31 @@ const CarritoPage = () => {
               {(Number(item.productoId?.precio || 0) * Number(item.cantidad || 0)).toLocaleString("es-AR")}
             </p>
           </Col>
-          <Col xs={12} md={4} className="text-md-end d-flex justify-content-end align-items-center gap-2 mt-3 mt-md-0">
-            <Button variant="outline-secondary" onClick={() => sumarUnidad(item.productoId._id, item.talle)} title="Sumar unidad">+</Button>
+          <Col
+            xs={12}
+            md={4}
+            className="text-md-end d-flex justify-content-end align-items-center gap-2 mt-3 mt-md-0"
+          >
+            <Button
+              variant="outline-secondary"
+              onClick={() => sumarUnidad(item.productoId._id, item.talle)}
+              title="Sumar unidad"
+            >
+              +
+            </Button>
             <span>{item.cantidad}</span>
-            <Button variant="outline-secondary" onClick={() => eliminarProducto(item.productoId._id, item.talle)} title="Eliminar una unidad">-</Button>
-            <Button variant="outline-danger" onClick={() => eliminarProductoTotal(item.productoId._id, item.talle)} title="Eliminar producto">
+            <Button
+              variant="outline-secondary"
+              onClick={() => eliminarProducto(item.productoId._id, item.talle)}
+              title="Eliminar una unidad"
+            >
+              -
+            </Button>
+            <Button
+              variant="outline-danger"
+              onClick={() => eliminarProductoTotal(item.productoId._id, item.talle)}
+              title="Eliminar producto"
+            >
               <BsTrash size={20} />
             </Button>
           </Col>
@@ -147,10 +185,20 @@ const CarritoPage = () => {
       <Row className="mt-4">
         <Col className="text-end">
           <h4>Total: ${calcularTotal().toLocaleString("es-AR")}</h4>
-          <Button variant="success" className="mt-2" onClick={confirmarCarrito} disabled={loading}>
+          <Button
+            variant="success"
+            className="mt-2"
+            onClick={confirmarCarrito}
+            disabled={loading || cargando}
+          >
             {loading ? "Procesando..." : "Confirmar la compra"}
           </Button>
-          <Button variant="outline-danger" className="mt-2 ms-2" onClick={vaciarCarrito} disabled={loading}>
+          <Button
+            variant="outline-danger"
+            className="mt-2 ms-2"
+            onClick={vaciarCarrito}
+            disabled={loading}
+          >
             Vaciar carrito
           </Button>
         </Col>
@@ -160,4 +208,3 @@ const CarritoPage = () => {
 };
 
 export default CarritoPage;
-
