@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Usamos la variable de entorno para el backend
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 export const AuthContext = createContext();
@@ -12,28 +11,36 @@ export const AuthProvider = ({ children }) => {
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
-  // 🔄 Rehidratar sesión al montar o cuando cambia el token
+  // 🔄 Rehidratar sesión al montar
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) {
-      setCargando(false);
-      return;
-    }
-
-    setToken(storedToken);
-
     const cargarUsuario = async () => {
       try {
-        const resp = await fetch(`${API_URL}/api/usuarios/me`, {
-          headers: {
-            "Content-Type": "application/json",
-            "x-token": storedToken, // 👈 tu backend espera este header
-          },
-        });
+        let resp;
+
+        if (import.meta.env.MODE === "production") {
+          // 🔐 Producción: cookie httpOnly
+          resp = await fetch(`${API_URL}/api/auth/check`, {
+            credentials: "include",
+          });
+        } else {
+          // 🛠 Desarrollo: token en localStorage
+          const storedToken = localStorage.getItem("token");
+          if (!storedToken) {
+            setCargando(false);
+            return;
+          }
+          setToken(storedToken);
+
+          resp = await fetch(`${API_URL}/api/usuarios/me`, {
+            headers: {
+              "Content-Type": "application/json",
+              "x-token": storedToken,
+            },
+          });
+        }
 
         if (resp.ok) {
           const data = await resp.json();
-
           const usuarioData = {
             id: data._id || data.id,
             nombre: data.nombre,
@@ -47,14 +54,13 @@ export const AuthProvider = ({ children }) => {
             codigoPostal: data.codigoPostal,
             dni: data.dni,
           };
-
           setUsuario(usuarioData);
         } else {
           setUsuario(null);
           setToken(null);
         }
       } catch (err) {
-        console.error("Error cargando usuario:", err);
+        console.error("❌ Error cargando usuario:", err);
         setUsuario(null);
         setToken(null);
       } finally {
@@ -63,12 +69,14 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, [token]); // 👈 se ejecuta al montar y cada vez que cambia el token
+  }, []);
 
-  // 👉 Login: guardar token y usuario
+  // 👉 Login
   const logIn = (usuarioData, token) => {
-    localStorage.setItem("token", token);
-    setToken(token);
+    if (import.meta.env.MODE !== "production") {
+      localStorage.setItem("token", token);
+      setToken(token);
+    }
 
     const usuarioNormalizado = {
       id: usuarioData._id || usuarioData.id,
@@ -87,12 +95,24 @@ export const AuthProvider = ({ children }) => {
     setUsuario(usuarioNormalizado);
   };
 
-  // 👉 Logout: limpiar token y usuario
-  const logOut = () => {
-    localStorage.removeItem("token");
-    setUsuario(null);
-    setToken(null);
-    navigate("/inicio", { replace: true });
+  // 👉 Logout
+  const logOut = async () => {
+    try {
+      if (import.meta.env.MODE === "production") {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } else {
+        localStorage.removeItem("token");
+      }
+    } catch (err) {
+      console.error("❌ Error en logout:", err);
+    } finally {
+      setUsuario(null);
+      setToken(null);
+      navigate("/inicio", { replace: true });
+    }
   };
 
   return (
@@ -102,6 +122,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 👇 Hook personalizado
 export const useAuth = () => useContext(AuthContext);
-
