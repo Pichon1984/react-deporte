@@ -57,8 +57,12 @@ export const AuthProvider = ({ children }) => {
           };
           setUsuario(usuarioData);
         } else {
+          // ⚠️ Si el token expiró o no es válido → logout automático
           setUsuario(null);
           setToken(null);
+          if (resp.status === 401) {
+            navigate("/login", { replace: true });
+          }
         }
       } catch (err) {
         console.error("❌ Error cargando usuario:", err);
@@ -70,32 +74,44 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, []);
+  }, [navigate]);
 
-  // 👉 Login
-  const logIn = async (usuarioData, token) => {
-    if (import.meta.env.MODE !== "production") {
-      if (token) {
-        localStorage.setItem("token", token);
-        setToken(token);
-      }
+ // 👉 Login
+const logIn = async (correo, password) => {
+  try {
+    const resp = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // 🔐 en producción se guarda cookie httpOnly
+      body: JSON.stringify({ correo, password }),
+    });
+
+    if (!resp.ok) {
+      const errorData = await resp.json();
+      throw new Error(errorData.msg || "Error en login");
     }
 
-    // ⚡ Si no recibimos usuario en el login, pedimos /check
-    if (!usuarioData || !usuarioData.nombre) {
-      try {
-        const resp = await fetch(`${API_URL}/api/auth/check`, {
-          headers: {
-            "Content-Type": "application/json",
-            "x-token": token || localStorage.getItem("token") || "",
-          },
-          credentials: "include",
-        });
-        const data = await resp.json();
-        usuarioData = data.usuario || data;
-      } catch (err) {
-        console.error("❌ Error verificando usuario en login:", err);
-      }
+    const data = await resp.json();
+
+    // 🛠 Desarrollo: si devuelve token, guardarlo en localStorage
+    if (import.meta.env.MODE !== "production" && data.token) {
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+    }
+
+    // ⚡ Normalizar usuario: si backend devuelve usuario, usarlo
+    let usuarioData = data.usuario;
+    if (!usuarioData) {
+      // Si backend solo devolvió msg, pedimos /check
+      const checkResp = await fetch(`${API_URL}/api/auth/check`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-token": data.token || localStorage.getItem("token") || "",
+        },
+        credentials: "include",
+      });
+      const checkData = await checkResp.json();
+      usuarioData = checkData.usuario;
     }
 
     const usuarioNormalizado = {
@@ -113,7 +129,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     setUsuario(usuarioNormalizado);
-  };
+  } catch (err) {
+    console.error("❌ Error en login:", err.message);
+    throw err;
+  }
+};
+
 
   // 👉 Logout
   const logOut = async () => {
@@ -143,3 +164,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
