@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/img/logo.png";
-
-const API_URL = import.meta.env.VITE_API_URL; // 👈 configurable desde .env
+import { fetchConToken } from "../helpers/fetchConToken";
 
 const LoginComponent = () => {
   const [correo, setCorreo] = useState("");
@@ -17,25 +16,10 @@ const LoginComponent = () => {
     setError(null);
 
     try {
-      const resp = await fetch(`${API_URL}/api/auth/login`, {
+      const data = await fetchConToken("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, password: contraseña }),
       });
-
-      if (!resp.ok) {
-        let msg = "Error en login";
-        try {
-          const dataError = await resp.json();
-          msg = dataError.msg || msg;
-        } catch {
-          if (resp.status === 404) msg = "Ruta de login no encontrada (404)";
-          if (resp.status === 403) msg = "Acceso prohibido (403)";
-        }
-        return setError(msg);
-      }
-
-      const data = await resp.json();
 
       if (!data.usuario || !data.token) {
         return setError("Respuesta inválida del servidor");
@@ -50,12 +34,14 @@ const LoginComponent = () => {
         direccion: data.usuario.direccion,
       };
 
+      // ✅ Guardar token y usuario en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
+      // ✅ Actualizar contexto de autenticación
       logIn(usuario, data.token);
 
-      // 🔹 Revisión de redirectAfterLogin
+      // 🔹 Redirección después de login
       const redirect = localStorage.getItem("redirectAfterLogin");
       if (redirect) {
         localStorage.removeItem("redirectAfterLogin");
@@ -63,7 +49,7 @@ const LoginComponent = () => {
         return;
       }
 
-      // 🔹 Si no hay redirect, seguir con la lógica de rol
+      // 🔹 Redirección según rol
       if (usuario.rol === "ADMIN") {
         navigate("/admin");
       } else if (usuario.rol === "CLIENTE") {
@@ -73,7 +59,7 @@ const LoginComponent = () => {
       }
     } catch (error) {
       console.error(error);
-      setError("Error en el servidor o CORS bloqueado");
+      setError(error.message || "Error en el servidor o CORS bloqueado");
     }
   };
 
@@ -134,4 +120,3 @@ const LoginComponent = () => {
 };
 
 export default LoginComponent;
-

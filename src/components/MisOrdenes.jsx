@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { fetchConToken } from '../helpers/fetch';
+import React, { useEffect, useState } from "react";
+import { fetchConToken } from "../helpers/fetch";
 
 export const MisOrdenesPage = () => {
   const [ordenes, setOrdenes] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const cargarOrdenes = async () => {
       try {
-        const resp = await fetchConToken('orders/misordenes'); // 👈 ruta del back
-        const body = await resp.json();
+        // 👈 fetchConToken ya devuelve el JSON
+        const body = await fetchConToken("/api/orders/misordenes");
 
         if (body.ok) {
           setOrdenes(body.ordenes);
         } else {
+          setError(body.msg || "Error cargando órdenes");
           console.error(body.msg);
         }
       } catch (error) {
-        console.error('Error cargando órdenes', error);
+        setError(error.message);
+        console.error("Error cargando órdenes", error);
       }
     };
 
@@ -26,6 +29,7 @@ export const MisOrdenesPage = () => {
   return (
     <div>
       <h2>Mis Órdenes</h2>
+      {error && <div className="alert alert-danger">{error}</div>}
       {ordenes.length === 0 ? (
         <p>No tienes órdenes registradas.</p>
       ) : (
@@ -47,4 +51,3 @@ export const MisOrdenesPage = () => {
     </div>
   );
 };
-
