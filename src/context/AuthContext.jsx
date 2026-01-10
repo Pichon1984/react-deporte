@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
           }
           setToken(storedToken);
 
-          resp = await fetch(`${API_URL}/api/usuarios/me`, {
+          resp = await fetch(`${API_URL}/api/auth/check`, {
             headers: {
               "Content-Type": "application/json",
               "x-token": storedToken,
@@ -41,18 +41,19 @@ export const AuthProvider = ({ children }) => {
 
         if (resp.ok) {
           const data = await resp.json();
+          const u = data.usuario || data; // backend puede devolver {usuario:{...}} o {...}
           const usuarioData = {
-            id: data._id || data.id,
-            nombre: data.nombre,
-            apellido: data.apellido,
-            correo: data.correo,
-            rol: (data.rol || "").toUpperCase(),
-            telefono: data.telefono,
-            direccion: data.direccion,
-            provincia: data.provincia,
-            localidad: data.localidad,
-            codigoPostal: data.codigoPostal,
-            dni: data.dni,
+            id: u._id || u.id,
+            nombre: u.nombre,
+            apellido: u.apellido,
+            correo: u.correo,
+            rol: (u.rol || "").toUpperCase(),
+            telefono: u.telefono,
+            direccion: u.direccion,
+            provincia: u.provincia,
+            localidad: u.localidad,
+            codigoPostal: u.codigoPostal,
+            dni: u.dni,
           };
           setUsuario(usuarioData);
         } else {
@@ -72,10 +73,29 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 👉 Login
-  const logIn = (usuarioData, token) => {
+  const logIn = async (usuarioData, token) => {
     if (import.meta.env.MODE !== "production") {
-      localStorage.setItem("token", token);
-      setToken(token);
+      if (token) {
+        localStorage.setItem("token", token);
+        setToken(token);
+      }
+    }
+
+    // ⚡ Si no recibimos usuario en el login, pedimos /check
+    if (!usuarioData || !usuarioData.nombre) {
+      try {
+        const resp = await fetch(`${API_URL}/api/auth/check`, {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": token || localStorage.getItem("token") || "",
+          },
+          credentials: "include",
+        });
+        const data = await resp.json();
+        usuarioData = data.usuario || data;
+      } catch (err) {
+        console.error("❌ Error verificando usuario en login:", err);
+      }
     }
 
     const usuarioNormalizado = {

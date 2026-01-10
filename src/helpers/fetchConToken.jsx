@@ -1,15 +1,23 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 export const fetchConToken = async (endpoint, options = {}) => {
-  const token = localStorage.getItem("token") || "";
-
-  const headers = {
+  let headers = {
     "Content-Type": "application/json",
-    "x-token": token, // 👈 siempre mandar token
     ...(options.headers || {}),
   };
 
-  const resp = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+  let fetchOptions = { ...options, headers };
+
+  if (import.meta.env.MODE === "production") {
+    // 🔐 Producción: usar cookie httpOnly
+    fetchOptions.credentials = "include";
+  } else {
+    // 🛠 Desarrollo: usar token en localStorage
+    const token = localStorage.getItem("token") || "";
+    headers["x-token"] = token;
+  }
+
+  const resp = await fetch(`${API_URL}${endpoint}`, fetchOptions);
 
   if (!resp.ok) {
     let msg = `Error ${resp.status}`;
@@ -24,3 +32,4 @@ export const fetchConToken = async (endpoint, options = {}) => {
 
   return await resp.json();
 };
+

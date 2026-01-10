@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/img/logo.png";
-import { fetchConToken } from "../helpers/fetchConToken";
 
 const LoginComponent = () => {
   const [correo, setCorreo] = useState("");
@@ -16,30 +15,45 @@ const LoginComponent = () => {
     setError(null);
 
     try {
-      const data = await fetchConToken("/api/auth/login", {
+      // 🔹 Login request
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, password: contraseña }),
+        credentials: "include", // siempre incluir cookies
       });
 
-      if (!data.usuario || !data.token) {
-        return setError("Respuesta inválida del servidor");
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        return setError(data.msg || "Error en login");
       }
 
-      const usuario = {
-        id: data.usuario.id,
-        nombre: data.usuario.nombre,
-        correo: data.usuario.correo,
-        rol: (data.usuario.rol || "").toUpperCase(),
-        telefono: data.usuario.telefono,
-        direccion: data.usuario.direccion,
-      };
+      // 🔹 Guardar token en localStorage (solo si existe)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
 
-      // ✅ Guardar token y usuario en localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
+      // 🔹 Obtener usuario con /check
+      const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-token": localStorage.getItem("token") || "",
+        },
+        credentials: "include",
+      });
+
+      const checkData = await checkResp.json();
+
+      if (!checkResp.ok || !checkData.usuario) {
+        return setError("No se pudo validar la sesión");
+      }
+
+      const usuario = checkData.usuario;
+      const token = data.token || null;
 
       // ✅ Actualizar contexto de autenticación
-      logIn(usuario, data.token);
+      logIn(usuario, token);
 
       // 🔹 Redirección después de login
       const redirect = localStorage.getItem("redirectAfterLogin");
@@ -120,3 +134,5 @@ const LoginComponent = () => {
 };
 
 export default LoginComponent;
+
+
