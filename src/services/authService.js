@@ -19,50 +19,52 @@ const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
 const headers = { "Content-Type": "application/json" };
 
-// Registro de usuario
+// 👉 Registro de usuario
 export async function register(datos) {
   const res = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
     headers,
     body: JSON.stringify(datos),
+    credentials: "include", // 🔑 guarda cookie en producción
   });
   return handleResponse(res);
 }
 
-// Login
+// 👉 Login
 export async function login(correo, password) {
   const res = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",
     headers,
     body: JSON.stringify({ correo, password }),
+    credentials: "include", // 🔑 guarda cookie en producción
   });
   return handleResponse(res);
 }
 
-// Perfil del usuario logueado (usando x-token)
+// 👉 Perfil del usuario logueado
 export async function getProfile(token) {
-  const res = await fetch(`${API_URL}/api/auth/me`, {
+  const res = await fetch(`${API_URL}/api/auth/check`, {
     headers: {
       ...headers,
-      "x-token": token,
+      "x-token": token || "", // 🛠 en dev se usa token, en prod la cookie
     },
+    credentials: "include", // 🔑 en producción viaja la cookie
   });
   return handleResponse(res);
 }
 
-// Forgot password
+// 👉 Forgot password
 export async function forgotPassword(email) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ correo: email }), // 👈 importante: backend espera "correo"
+    body: JSON.stringify({ correo: email }), // 👈 backend espera "correo"
+    credentials: "include",
   });
   return handleResponse(res);
 }
 
-
-
-// Reset password
+// 👉 Reset password
 export async function resetPassword(token, newPassword) {
   console.log("📤 Enviando a resetPassword:", { token, newPassword });
   try {
@@ -70,6 +72,7 @@ export async function resetPassword(token, newPassword) {
       method: "POST",
       headers,
       body: JSON.stringify({ token, newPassword }),
+      credentials: "include",
     });
     return handleResponse(res);
   } catch (error) {
@@ -78,12 +81,22 @@ export async function resetPassword(token, newPassword) {
   }
 }
 
-// Compras service
+// 👉 Logout
+export async function logout() {
+  const res = await fetch(`${API_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include", // 🔑 borra cookie en producción
+  });
+  return handleResponse(res);
+}
+
+// 👉 Compras service
 export const ComprasService = {
   getById: async (id) => {
     if (!id) throw new Error("El ID de la compra es requerido");
     const res = await fetch(`${API_URL}/api/compras/${encodeURIComponent(id)}`, {
       headers,
+      credentials: "include",
     });
     return handleResponse(res);
   },
