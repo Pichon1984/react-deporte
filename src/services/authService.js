@@ -42,11 +42,13 @@ export async function login(correo, password) {
 }
 
 // 👉 Perfil del usuario logueado
-export async function getProfile(token) {
+export async function getProfile() {
+  const token = localStorage.getItem("token") || "";
+
   const res = await fetch(`${API_URL}/api/auth/check`, {
     headers: {
       ...headers,
-      "x-token": token || "", // 🛠 en dev se usa token, en prod la cookie
+      "x-token": import.meta.env.MODE !== "production" ? token : "",
     },
     credentials: "include", // 🔑 en producción viaja la cookie
   });
@@ -87,18 +89,10 @@ export async function logout() {
     method: "POST",
     credentials: "include", // 🔑 borra cookie en producción
   });
+
+  if (import.meta.env.MODE !== "production") {
+    localStorage.removeItem("token"); // 🛠 en dev borra token
+  }
+
   return handleResponse(res);
 }
-
-// 👉 Compras service
-export const ComprasService = {
-  getById: async (id) => {
-    if (!id) throw new Error("El ID de la compra es requerido");
-    const res = await fetch(`${API_URL}/api/compras/${encodeURIComponent(id)}`, {
-      headers,
-      credentials: "include",
-    });
-    return handleResponse(res);
-  },
-};
-
