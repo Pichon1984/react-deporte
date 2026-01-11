@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -9,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [token, setToken] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const navigate = useNavigate();
 
   // 🔄 Rehidratar sesión al montar
   useEffect(() => {
@@ -57,11 +55,9 @@ export const AuthProvider = ({ children }) => {
           };
           setUsuario(usuarioData);
         } else {
+          // ❌ No redirigimos aquí
           setUsuario(null);
           setToken(null);
-          if (resp.status === 401) {
-            navigate("/login", { replace: true });
-          }
         }
       } catch (err) {
         console.error("❌ Error cargando usuario:", err);
@@ -73,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     cargarUsuario();
-  }, [navigate]);
+  }, []);
 
   // 👉 Login
   const logIn = async (correo, password) => {
@@ -99,7 +95,6 @@ export const AuthProvider = ({ children }) => {
       // ⚡ Normalizar usuario
       let usuarioData = data.usuario;
       if (!usuarioData) {
-        // Si backend solo devolvió msg, pedimos /check
         const checkResp = await fetch(`${API_URL}/api/auth/check`, {
           headers: {
             "Content-Type": "application/json",
@@ -148,7 +143,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUsuario(null);
       setToken(null);
-      navigate("/inicio", { replace: true });
     }
   };
 
