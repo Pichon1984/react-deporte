@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/img/logo.png";
 
@@ -8,74 +8,69 @@ const LoginComponent = () => {
   const [contraseña, setContraseña] = useState("");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { logIn } = useAuth();
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError(null);
+  // 🔹 Ruta original desde ProtectedRoute o fallback a inicio
+  const from = location.state?.from?.pathname || "/inicio";
 
-  try {
-    // 🔹 Login request
-    const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ correo, password: contraseña }),
-      credentials: "include", // siempre incluir cookies
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
 
-    const data = await resp.json();
+    try {
+      // 🔹 Login request
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo, password: contraseña }),
+        credentials: "include", // siempre incluir cookies
+      });
 
-    if (!resp.ok) {
-      return setError(data.msg || "Error en login");
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        return setError(data.msg || "Error en login");
+      }
+
+      // 🔹 Guardar token en localStorage (solo en desarrollo)
+      if (import.meta.env.MODE !== "production" && data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      // 🔹 Obtener usuario con /check
+      const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
+        credentials: "include", // en producción viaja la cookie
+        headers: import.meta.env.MODE !== "production"
+          ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
+          : {},
+      });
+
+      const checkData = await checkResp.json();
+
+      if (!checkResp.ok || !checkData.usuario) {
+        return setError("No se pudo validar la sesión");
+      }
+
+      const usuario = checkData.usuario;
+      const token = data.token || null;
+
+      // ✅ Actualizar contexto de autenticación
+      logIn(usuario, token);
+
+      // 🔹 Redirección: vuelve a la ruta original o al rol
+      if (usuario.rol === "ADMIN") {
+        navigate("/admin", { replace: true });
+      } else if (usuario.rol === "CLIENTE") {
+        navigate("/cliente", { replace: true });
+      } else {
+        navigate(from, { replace: true }); // vuelve a la ruta original o inicio
+      }
+    } catch (error) {
+      console.error(error);
+      setError(error.message || "Error en el servidor o CORS bloqueado");
     }
-
-    // 🔹 Guardar token en localStorage (solo en desarrollo)
-    if (import.meta.env.MODE !== "production" && data.token) {
-      localStorage.setItem("token", data.token);
-    }
-
-    // 🔹 Obtener usuario con /check
-    const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
-      credentials: "include", // en producción viaja la cookie
-      headers: import.meta.env.MODE !== "production"
-        ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
-        : {},
-    });
-
-    const checkData = await checkResp.json();
-
-    if (!checkResp.ok || !checkData.usuario) {
-      return setError("No se pudo validar la sesión");
-    }
-
-    const usuario = checkData.usuario;
-    const token = data.token || null;
-
-    // ✅ Actualizar contexto de autenticación
-    logIn(usuario, token);
-
-    // 🔹 Redirección después de login
-    const redirect = localStorage.getItem("redirectAfterLogin");
-    if (redirect) {
-      localStorage.removeItem("redirectAfterLogin");
-      navigate(redirect);
-      return;
-    }
-
-    // 🔹 Redirección según rol
-    if (usuario.rol === "ADMIN") {
-      navigate("/admin");
-    } else if (usuario.rol === "CLIENTE") {
-      navigate("/cliente");
-    } else {
-      navigate("/inicio");
-    }
-  } catch (error) {
-    console.error(error);
-    setError(error.message || "Error en el servidor o CORS bloqueado");
-  }
-};
-
+  };
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
@@ -123,7 +118,7 @@ const LoginComponent = () => {
           </form>
 
           <div className="mb-3">
-            <Link to="/Registro" className="text-decoration-none">
+            <Link to="/registro" className="text-decoration-none">
               Registrarme
             </Link>
           </div>
@@ -134,5 +129,3 @@ const LoginComponent = () => {
 };
 
 export default LoginComponent;
-
-
