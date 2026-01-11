@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
         if (resp.ok) {
           const data = await resp.json();
-          const u = data.usuario || data; // backend puede devolver {usuario:{...}} o {...}
+          const u = data.usuario || data;
           const usuarioData = {
             id: u._id || u.id,
             nombre: u.nombre,
@@ -57,7 +57,6 @@ export const AuthProvider = ({ children }) => {
           };
           setUsuario(usuarioData);
         } else {
-          // ⚠️ Si el token expiró o no es válido → logout automático
           setUsuario(null);
           setToken(null);
           if (resp.status === 401) {
@@ -76,65 +75,62 @@ export const AuthProvider = ({ children }) => {
     cargarUsuario();
   }, [navigate]);
 
- // 👉 Login
-const logIn = async (correo, password) => {
-  try {
-    const resp = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔐 en producción se guarda cookie httpOnly
-      body: JSON.stringify({ correo, password }),
-    });
-
-    if (!resp.ok) {
-      const errorData = await resp.json();
-      throw new Error(errorData.msg || "Error en login");
-    }
-
-    const data = await resp.json();
-
-    // 🛠 Desarrollo: si devuelve token, guardarlo en localStorage
-    if (import.meta.env.MODE !== "production" && data.token) {
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
-    }
-
-    // ⚡ Normalizar usuario: si backend devuelve usuario, usarlo
-    let usuarioData = data.usuario;
-    if (!usuarioData) {
-      // Si backend solo devolvió msg, pedimos /check
-      const checkResp = await fetch(`${API_URL}/api/auth/check`, {
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": data.token || localStorage.getItem("token") || "",
-        },
-        credentials: "include",
+  // 👉 Login
+  const logIn = async (correo, password) => {
+    try {
+      const resp = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // 🔐 en producción se guarda cookie httpOnly
+        body: JSON.stringify({ correo, password }),
       });
-      const checkData = await checkResp.json();
-      usuarioData = checkData.usuario;
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.msg || "Error en login");
+      }
+
+      // 🛠 Desarrollo: si devuelve token, guardarlo en localStorage
+      if (import.meta.env.MODE !== "production" && data.token) {
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+      }
+
+      // ⚡ Normalizar usuario
+      let usuarioData = data.usuario;
+      if (!usuarioData) {
+        // Si backend solo devolvió msg, pedimos /check
+        const checkResp = await fetch(`${API_URL}/api/auth/check`, {
+          headers: {
+            "Content-Type": "application/json",
+            "x-token": data.token || localStorage.getItem("token") || "",
+          },
+          credentials: "include",
+        });
+        const checkData = await checkResp.json();
+        usuarioData = checkData.usuario;
+      }
+
+      const usuarioNormalizado = {
+        id: usuarioData._id || usuarioData.id,
+        nombre: usuarioData.nombre,
+        apellido: usuarioData.apellido,
+        correo: usuarioData.correo,
+        rol: (usuarioData.rol || "").toUpperCase(),
+        telefono: usuarioData.telefono,
+        direccion: usuarioData.direccion,
+        provincia: usuarioData.provincia,
+        localidad: usuarioData.localidad,
+        codigoPostal: usuarioData.codigoPostal,
+        dni: usuarioData.dni,
+      };
+
+      setUsuario(usuarioNormalizado);
+    } catch (err) {
+      console.error("❌ Error en login:", err.message);
+      throw err;
     }
-
-    const usuarioNormalizado = {
-      id: usuarioData._id || usuarioData.id,
-      nombre: usuarioData.nombre,
-      apellido: usuarioData.apellido,
-      correo: usuarioData.correo,
-      rol: (usuarioData.rol || "").toUpperCase(),
-      telefono: usuarioData.telefono,
-      direccion: usuarioData.direccion,
-      provincia: usuarioData.provincia,
-      localidad: usuarioData.localidad,
-      codigoPostal: usuarioData.codigoPostal,
-      dni: usuarioData.dni,
-    };
-
-    setUsuario(usuarioNormalizado);
-  } catch (err) {
-    console.error("❌ Error en login:", err.message);
-    throw err;
-  }
-};
-
+  };
 
   // 👉 Logout
   const logOut = async () => {
@@ -164,4 +160,3 @@ const logIn = async (correo, password) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
