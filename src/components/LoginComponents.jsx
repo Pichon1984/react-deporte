@@ -10,72 +10,72 @@ const LoginComponent = () => {
   const navigate = useNavigate();
   const { logIn } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError(null);
 
-    try {
-      // 🔹 Login request
-      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo, password: contraseña }),
-        credentials: "include", // siempre incluir cookies
-      });
+  try {
+    // 🔹 Login request
+    const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo, password: contraseña }),
+      credentials: "include", // siempre incluir cookies
+    });
 
-      const data = await resp.json();
+    const data = await resp.json();
 
-      if (!resp.ok) {
-        return setError(data.msg || "Error en login");
-      }
-
-      // 🔹 Guardar token en localStorage (solo si existe)
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      // 🔹 Obtener usuario con /check
-      const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": localStorage.getItem("token") || "",
-        },
-        credentials: "include",
-      });
-
-      const checkData = await checkResp.json();
-
-      if (!checkResp.ok || !checkData.usuario) {
-        return setError("No se pudo validar la sesión");
-      }
-
-      const usuario = checkData.usuario;
-      const token = data.token || null;
-
-      // ✅ Actualizar contexto de autenticación
-      logIn(usuario, token);
-
-      // 🔹 Redirección después de login
-      const redirect = localStorage.getItem("redirectAfterLogin");
-      if (redirect) {
-        localStorage.removeItem("redirectAfterLogin");
-        navigate(redirect);
-        return;
-      }
-
-      // 🔹 Redirección según rol
-      if (usuario.rol === "ADMIN") {
-        navigate("/admin");
-      } else if (usuario.rol === "CLIENTE") {
-        navigate("/cliente");
-      } else {
-        navigate("/inicio");
-      }
-    } catch (error) {
-      console.error(error);
-      setError(error.message || "Error en el servidor o CORS bloqueado");
+    if (!resp.ok) {
+      return setError(data.msg || "Error en login");
     }
-  };
+
+    // 🔹 Guardar token en localStorage (solo en desarrollo)
+    if (import.meta.env.MODE !== "production" && data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
+    // 🔹 Obtener usuario con /check
+    const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
+      credentials: "include", // en producción viaja la cookie
+      headers: import.meta.env.MODE !== "production"
+        ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
+        : {},
+    });
+
+    const checkData = await checkResp.json();
+
+    if (!checkResp.ok || !checkData.usuario) {
+      return setError("No se pudo validar la sesión");
+    }
+
+    const usuario = checkData.usuario;
+    const token = data.token || null;
+
+    // ✅ Actualizar contexto de autenticación
+    logIn(usuario, token);
+
+    // 🔹 Redirección después de login
+    const redirect = localStorage.getItem("redirectAfterLogin");
+    if (redirect) {
+      localStorage.removeItem("redirectAfterLogin");
+      navigate(redirect);
+      return;
+    }
+
+    // 🔹 Redirección según rol
+    if (usuario.rol === "ADMIN") {
+      navigate("/admin");
+    } else if (usuario.rol === "CLIENTE") {
+      navigate("/cliente");
+    } else {
+      navigate("/inicio");
+    }
+  } catch (error) {
+    console.error(error);
+    setError(error.message || "Error en el servidor o CORS bloqueado");
+  }
+};
+
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
