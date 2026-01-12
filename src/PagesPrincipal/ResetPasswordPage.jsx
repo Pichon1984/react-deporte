@@ -51,15 +51,15 @@ const ResetPasswordPage = () => {
       const resp = await resetPassword(token, newPassword);
 
       if (resp.ok) {
-        setMensaje(resp.data.msg); // "Contraseña actualizada correctamente"
+        setMensaje(resp.data.msg || "Contraseña actualizada correctamente");
 
+        // Redirige al login/cuenta después de 2 segundos
         setTimeout(() => {
-          navigate("/Cuenta"); // 👈 usa la ruta real de tu login
+          navigate("/cuenta"); // 👈 asegúrate que esta ruta exista en tu router
         }, 2000);
       } else {
         setError(resp.data?.msg || "No se pudo actualizar la contraseña.");
       }
-
     } catch (err) {
       console.error("❌ Error en ResetPasswordPage:", err);
       setError("Error de conexión con el servidor.");
