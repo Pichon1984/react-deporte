@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Container, Nav, Navbar, NavDropdown, Button, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { CarritoContext } from '../context/CarritoContext';
 import { AuthContext } from '../context/AuthContext';
 import { BsCart } from "react-icons/bs";
@@ -12,7 +12,6 @@ import { getCategorias } from '../services/api'; // 👈 servicio que trae categ
 export const NavigateApp = () => {
   const { carrito } = useContext(CarritoContext);
   const { usuario, logOut } = useContext(AuthContext);
-  const navigate = useNavigate();
 
   const [categorias, setCategorias] = useState([]);
   const [loadingCategorias, setLoadingCategorias] = useState(true);
@@ -44,8 +43,7 @@ export const NavigateApp = () => {
   };
 
   const handleLogout = () => {
-    logOut();
-    navigate("/inicio", { replace: true });
+    logOut(); // 👈 ya navega dentro del contexto
   };
 
   const popover = (
@@ -107,8 +105,8 @@ export const NavigateApp = () => {
               )}
             </NavDropdown>
 
-            <Nav.Link as={NavLink} to="/Nosotros">Nosotros</Nav.Link>
-            <Nav.Link as={NavLink} to="/Contacto">Contacto</Nav.Link>
+            <Nav.Link as={NavLink} to="/nosotros">Nosotros</Nav.Link>
+            <Nav.Link as={NavLink} to="/contacto">Contacto</Nav.Link>
             <SearchInput />
           </Nav>
 
@@ -128,7 +126,7 @@ export const NavigateApp = () => {
             </OverlayTrigger>
 
             {usuario && (
-              <Nav.Link as={NavLink} to={`/${usuario.rol}`}>
+              <Nav.Link as={NavLink} to={`/${usuario.rol.toLowerCase()}`}>
                 {usuario.rol === 'ADMIN' ? 'Admin' : `Hola, ${usuario.nombre}`}
               </Nav.Link>
             )}
@@ -138,7 +136,7 @@ export const NavigateApp = () => {
                 Cerrar sesión
               </Button>
             ) : (
-              <Button as={NavLink} to="/Cuenta" variant="outline-light">
+              <Button as={NavLink} to="/cuenta" variant="outline-light">
                 Inicio de sesión
               </Button>
             )}
