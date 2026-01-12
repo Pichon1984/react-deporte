@@ -1,4 +1,4 @@
-// Helper para manejar respuestas
+
 async function handleResponse(res) {
   let data;
   try {
@@ -7,16 +7,17 @@ async function handleResponse(res) {
     data = { msg: "Respuesta inválida del servidor" };
   }
 
-  if (!res.ok) {
-    return { ok: false, status: res.status, data };
-  }
-
-  return { ok: true, status: res.status, data };
+  return {
+    ok: res.ok,
+    status: res.status,
+    data,
+  };
 }
 
-// Normalizar API_URL (evitar doble barra)
-const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+// 👉 Normalizar API_URL (evitar doble barra final)
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
+// 👉 Headers comunes
 const headers = { "Content-Type": "application/json" };
 
 // 👉 Registro de usuario
@@ -48,9 +49,10 @@ export async function getProfile() {
   const res = await fetch(`${API_URL}/api/auth/check`, {
     headers: {
       ...headers,
-      "x-token": import.meta.env.MODE !== "production" ? token : "",
+      // En desarrollo se usa header x-token, en producción viaja cookie httpOnly
+      ...(import.meta.env.MODE !== "production" ? { "x-token": token } : {}),
     },
-    credentials: "include", // 🔑 en producción viaja la cookie
+    credentials: "include",
   });
   return handleResponse(res);
 }
@@ -69,18 +71,13 @@ export async function forgotPassword(email) {
 // 👉 Reset password
 export async function resetPassword(token, newPassword) {
   console.log("📤 Enviando a resetPassword:", { token, newPassword });
-  try {
-    const res = await fetch(`${API_URL}/api/auth/reset-password`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ token, newPassword }),
-      credentials: "include",
-    });
-    return handleResponse(res);
-  } catch (error) {
-    console.error("❌ Error en resetPassword:", error);
-    throw error;
-  }
+  const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ token, newPassword }),
+    credentials: "include",
+  });
+  return handleResponse(res);
 }
 
 // 👉 Logout
@@ -90,9 +87,12 @@ export async function logout() {
     credentials: "include", // 🔑 borra cookie en producción
   });
 
+  // En desarrollo se usa localStorage
   if (import.meta.env.MODE !== "production") {
-    localStorage.removeItem("token"); // 🛠 en dev borra token
+    localStorage.removeItem("token");
   }
 
   return handleResponse(res);
 }
+
+
