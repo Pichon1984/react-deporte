@@ -35,13 +35,11 @@ function App() {
       <main className="main-content container mt-4 flex-grow-1">
         <Routes>
           {/* Páginas públicas */}
-          <Route path="/" element={<Inicio />} />
           <Route path="/inicio" element={<Inicio />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/registro" element={<Registro />} />
-          {/* ✅ corregido: usamos :id */}
           <Route path="/categoria/:id" element={<CategoriaPage />} />
           <Route path="/detalle/:id" element={<DetalleProducto />} />
           <Route path="/cuenta" element={<Cuenta />} />

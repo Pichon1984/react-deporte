@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // 👈 importar
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -8,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [token, setToken] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const navigate = useNavigate(); // 👈 hook de navegación
 
   // 🔄 Rehidratar sesión al montar
   useEffect(() => {
@@ -55,7 +57,6 @@ export const AuthProvider = ({ children }) => {
           };
           setUsuario(usuarioData);
         } else {
-          // ❌ No redirigimos aquí
           setUsuario(null);
           setToken(null);
         }
@@ -71,63 +72,16 @@ export const AuthProvider = ({ children }) => {
     cargarUsuario();
   }, []);
 
-  // 👉 Login
-  const logIn = async (correo, password) => {
-    try {
-      const resp = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 🔐 en producción se guarda cookie httpOnly
-        body: JSON.stringify({ correo, password }),
-      });
-
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.msg || "Error en login");
-      }
-
-      // 🛠 Desarrollo: si devuelve token, guardarlo en localStorage
-      if (import.meta.env.MODE !== "production" && data.token) {
-        localStorage.setItem("token", data.token);
-        setToken(data.token);
-      }
-
-      // ⚡ Normalizar usuario
-      let usuarioData = data.usuario;
-      if (!usuarioData) {
-        const checkResp = await fetch(`${API_URL}/api/auth/check`, {
-          headers: {
-            "Content-Type": "application/json",
-            "x-token": data.token || localStorage.getItem("token") || "",
-          },
-          credentials: "include",
-        });
-        const checkData = await checkResp.json();
-        usuarioData = checkData.usuario;
-      }
-
-      const usuarioNormalizado = {
-        id: usuarioData._id || usuarioData.id,
-        nombre: usuarioData.nombre,
-        apellido: usuarioData.apellido,
-        correo: usuarioData.correo,
-        rol: (usuarioData.rol || "").toUpperCase(),
-        telefono: usuarioData.telefono,
-        direccion: usuarioData.direccion,
-        provincia: usuarioData.provincia,
-        localidad: usuarioData.localidad,
-        codigoPostal: usuarioData.codigoPostal,
-        dni: usuarioData.dni,
-      };
-
-      setUsuario(usuarioNormalizado);
-    } catch (err) {
-      console.error("❌ Error en login:", err.message);
-      throw err;
+  // 👉 Login (solo actualiza estado con datos recibidos desde LoginComponent)
+  const logIn = (usuarioData, tokenData) => {
+    if (import.meta.env.MODE !== "production" && tokenData) {
+      localStorage.setItem("token", tokenData);
+      setToken(tokenData);
     }
+    setUsuario(usuarioData);
   };
 
-  // 👉 Logout
+  // 👉 Logout con redirección
   const logOut = async () => {
     try {
       if (import.meta.env.MODE === "production") {
@@ -143,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUsuario(null);
       setToken(null);
+      navigate("/inicio", { replace: true }); // 👈 redirigir al inicio
     }
   };
 
@@ -154,3 +109,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
