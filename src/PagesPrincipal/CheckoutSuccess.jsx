@@ -16,7 +16,7 @@ export function CheckoutSuccess() {
         setCompra(data);
       })
       .catch((err) => {
-        console.error("❌ Error al traer la compra:", err);
+        console.error(" Error al traer la compra:", err);
         setError(err.message || "No se pudo cargar la compra");
       });
   }, [id]);
@@ -30,7 +30,7 @@ export function CheckoutSuccess() {
   const totalFinal = compra.totalFinal ?? total + costoEnvio;
   const faltante = Math.max(LIMITE_ENVIO_GRATIS - total, 0);
 
-  // 🔑 Función segura para formatear fechas
+
   const formatDate = (dateString) => {
     if (!dateString) return "Sin fecha";
     const fecha = new Date(dateString);
@@ -45,17 +45,17 @@ export function CheckoutSuccess() {
         });
   };
 
-  // 📌 Mensaje dinámico según estado
+ 
   const renderEstado = () => {
     switch (compra.estado) {
       case "pagada":
-        return <h2 style={{ color: "green" }}>✅ Pago aprobado</h2>;
+        return <h2 style={{ color: "green" }}> Pago aprobado</h2>;
       case "pendiente":
-        return <h2 style={{ color: "orange" }}>⏳ Pago pendiente</h2>;
+        return <h2 style={{ color: "orange" }}> Pago pendiente</h2>;
       case "fallida":
-        return <h2 style={{ color: "red" }}>❌ Pago rechazado</h2>;
+        return <h2 style={{ color: "red" }}> Pago rechazado</h2>;
       case "reembolsada":
-        return <h2 style={{ color: "blue" }}>💸 Pago reembolsado</h2>;
+        return <h2 style={{ color: "blue" }}> Pago reembolsado</h2>;
       default:
         return <h2>ℹ️ Estado desconocido</h2>;
     }
@@ -79,7 +79,7 @@ export function CheckoutSuccess() {
         <p style={{ color: "blue" }}>¡Tenés envío gratis! 🎉</p>
       )}
 
-      {/* 📅 Fechas seguras */}
+      
       <p><strong>Fecha de creación:</strong> {formatDate(compra.createdAt)}</p>
       <p><strong>Fecha de envío:</strong> {formatDate(compra.fechaEnvio)}</p>
       <p><strong>Fecha de entrega:</strong> {formatDate(compra.fechaEntrega)}</p>

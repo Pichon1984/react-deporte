@@ -13,7 +13,7 @@ const BuscarPage = () => {
       fetch(`/api/productos?search=${encodeURIComponent(query)}`)
         .then((res) => res.json())
         .then((data) => {
-          // ✅ si la API devuelve { productos: [...] }
+         
           setProductos(Array.isArray(data.productos) ? data.productos : []);
         })
         .catch((err) => {

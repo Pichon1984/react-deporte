@@ -10,7 +10,7 @@ const AdminCompras = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const limit = 10; // cantidad de compras por página
+  const limit = 10; 
 
   const queryParamsBase = useMemo(() => {
     const qp = new URLSearchParams();
@@ -27,7 +27,7 @@ const AdminCompras = () => {
       const qp = new URLSearchParams(queryParamsBase.toString());
       qp.set("page", pagina);
 
-      const data = await ComprasService.list(); // ✅ usamos el servicio
+      const data = await ComprasService.list(); 
       setCompras(Array.isArray(data.compras) ? data.compras : []);
       setPage(data.page || pagina);
       setTotalPages(data.totalPages || 1);
@@ -44,7 +44,7 @@ const AdminCompras = () => {
 
   useEffect(() => {
     fetchCompras(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const aplicarFiltros = () => {
@@ -58,7 +58,7 @@ const AdminCompras = () => {
     fetchCompras(p);
   };
 
-  // ✅ Confirmar pago usando ComprasService
+
   const confirmarPago = async (id) => {
     try {
       const updated = await ComprasService.confirmarPago(id);
@@ -69,7 +69,7 @@ const AdminCompras = () => {
     }
   };
 
-  // ✅ Guardar envío usando ComprasService
+ 
   const guardarEnvio = async (compra) => {
     try {
       const updated = await ComprasService.actualizarEnvio(compra._id, {
@@ -136,7 +136,7 @@ const AdminCompras = () => {
         </Alert>
       )}
 
-      {/* Filtros */}
+
       <Row className="mb-3 g-2">
         <Col xs={12} md={3}>
           <Form.Select
@@ -172,7 +172,7 @@ const AdminCompras = () => {
         </Col>
       </Row>
 
-      {/* Tabla */}
+  
       <div className="table-responsive">
         <Table striped bordered hover>
           <thead>
@@ -231,7 +231,7 @@ const AdminCompras = () => {
                   </div>
                 </td>
 
-                {/* Estado de envío */}
+     
                 <td style={{ minWidth: 160 }}>
                   <Form.Select
                     value={compra.estadoEnvio || "pendiente"}
@@ -249,7 +249,6 @@ const AdminCompras = () => {
                   </Form.Select>
                 </td>
 
-                {/* Tracking */}
                 <td style={{ minWidth: 180 }}>
                   <Form.Control
                     placeholder="Número de seguimiento"
@@ -264,7 +263,7 @@ const AdminCompras = () => {
                   />
                 </td>
 
-                {/* Courier */}
+         
                 <td style={{ minWidth: 160 }}>
                   <Form.Control
                     placeholder="Courier"
@@ -279,7 +278,7 @@ const AdminCompras = () => {
                   />
                 </td>
 
-                {/* Fechas */}
+          
                 <td>
                   <div className="small">
                     <div>Creada: {new Date(compra.createdAt).toLocaleDateString()}</div>
@@ -292,7 +291,7 @@ const AdminCompras = () => {
                   </div>
                 </td>
 
-                {/* Acciones */}
+        
                 <td>
                   <div className="d-flex flex-column gap-2">
                     <Button
@@ -317,7 +316,7 @@ const AdminCompras = () => {
         </Table>
       </div>
 
-      {/* Paginación */}
+
       {renderPagination()}
     </div>
   );

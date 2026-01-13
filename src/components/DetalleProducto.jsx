@@ -19,7 +19,7 @@ import MiniaturasCarrusel from '../components/carrusel/MiniaturasCarrusel';
 import ImagenPrincipal from '../components/carrusel/ImagenPrincipal';
 import PagoMercadoPago from '../components/PagoMercadoPago';
 
-// 👇 Importá tu API_URL desde el cliente centralizado
+
 import { API_URL } from '../services/api';
 
 function DetalleProducto() {
@@ -50,7 +50,7 @@ function DetalleProducto() {
 
   const montoTotal = ((producto?.precio || 0) * cantidad) + (envioAndreani?.costo || 0);
 
-  // Cargar producto
+
   useEffect(() => {
     const fetchProducto = async () => {
       try {
@@ -64,7 +64,7 @@ function DetalleProducto() {
     if (id) fetchProducto();
   }, [id]);
 
-  // Cotización Andreani
+
   useEffect(() => {
     const fetchEnvioAndreani = async () => {
       try {
@@ -80,7 +80,7 @@ function DetalleProducto() {
     if (producto) fetchEnvioAndreani();
   }, [producto]);
 
-  // Cuotas MercadoPago
+
   useEffect(() => {
     const fetchCuotas = async () => {
       try {
@@ -106,7 +106,7 @@ function DetalleProducto() {
     if (producto?.precio) fetchCuotas();
   }, [producto]);
 
-  // Crear preferencia de pago
+
   useEffect(() => {
     const crearPreferencia = async () => {
       try {
@@ -239,7 +239,7 @@ function DetalleProducto() {
             </Alert>
           )}
 
-          {/* Talles */}
+       
           {producto.tallesUnidades?.length > 0 && (
             <div className="mt-3">
               <h5>Talles disponibles</h5>
@@ -248,7 +248,7 @@ function DetalleProducto() {
                   <Button
                     key={idx}
                     variant={talleSeleccionado?.talle === talle.talle ? 'primary' : 'outline-secondary'}
-                    onClick={() => setTalleSeleccionado(talle)} // guarda el objeto completo
+                    onClick={() => setTalleSeleccionado(talle)} 
                     style={{ minWidth: '80px' }}
                     disabled={talle.stock <= 0}
                   >
@@ -274,7 +274,7 @@ function DetalleProducto() {
             <small className="text-muted">Stock disponible: {producto.stock || 0}</small>
           </div>
 
-          {/* Métodos de envío */}
+  
           {producto.envio?.metodos?.length > 0 && (
             <div className="mt-3">
               <h5>Métodos de envío</h5>
@@ -293,7 +293,7 @@ function DetalleProducto() {
             </div>
           )}
 
-          {/* Cotización Andreani */}
+    
           {envioAndreani && (
             <div className="mt-3">
               <h5>Envío con Andreani</h5>
@@ -302,7 +302,7 @@ function DetalleProducto() {
             </div>
           )}
 
-          {/* Cuotas MercadoPago */}
+        
           <div className="mt-3">
             <h5>Cuotas con MercadoPago</h5>
             {cuotasMP.length > 0 ? (
@@ -332,7 +332,7 @@ function DetalleProducto() {
             )}
           </div>
 
-          {/* Botón de pago MercadoPago */}
+          
           {preferenceId && (
             <div className="mt-3">
               <h5>Finalizar compra</h5>
@@ -352,7 +352,7 @@ function DetalleProducto() {
         </Col>
       </Row>
 
-      {/* Consultas */}
+    
       <Row className="mt-4">
         <Col xs={12}>
           <h5>Consultas de otros clientes</h5>
@@ -373,7 +373,6 @@ function DetalleProducto() {
         </Col>
       </Row>
 
-      {/* Toast de confirmación */}
       <ToastContainer position="bottom-end" className="p-3">
         <Toast
           bg="success"

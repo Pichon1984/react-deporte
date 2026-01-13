@@ -2,7 +2,7 @@ import '../styles/inicio.css'
 import { Carousel, Card, Row, Col, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { getCategorias } from '../services/api'; // 👈 servicio que trae categorías
+import { getCategorias } from '../services/api'; 
 
 import Desktop from '../assets/img/Desktop.webp';
 import Desktop2 from '../assets/img/Desktop2.webp';
@@ -11,7 +11,7 @@ import zapatilla from '../assets/img/zapatilla-adidas-grand-court-alpha-00s-muje
 import camiseta from '../assets/img/camiseta-de-argentina-adidas-oficial-blanc-removebg-preview.png';
 import pelota from '../assets/img/pelota-de-futbol-adidas-messi-mini-rosa-100040jm4756001-1-removebg-preview.png';
 
-// Importá el modal
+
 import PromoModal from '../components/PromoModal';
 
 export function Inicio() {
@@ -27,7 +27,7 @@ export function Inicio() {
     fetchCategorias();
   }, []);
 
-  // Mapeo de imágenes según nombre (normalizado en minúsculas)
+  
   const imagenesPorNombre = {
     calzado: zapatilla,
     indumentaria: camiseta,
@@ -36,7 +36,7 @@ export function Inicio() {
 
   return (
     <>
-      {/* Modal de promoción */}
+
       <PromoModal />
 
       <div className="carousel-wrapper">
@@ -53,17 +53,17 @@ export function Inicio() {
         </Carousel>
       </div>
 
-      {/* Título */}
+
       <Container className="my-5">
         <h1 className="text-center mb-4">Lanzamientos</h1>
 
-        {/* Cards dinámicas */}
+     
         <Row className="g-4 justify-content-center">
           {categorias.map((cat) => (
             <Col key={cat._id} md={4}>
               <Card className="h-100 text-center">
                 <Link
-                  to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
+                  to={`/categoria/${cat._id}`} 
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <Card.Img

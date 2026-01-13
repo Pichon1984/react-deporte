@@ -14,8 +14,8 @@ const SelectorTalles = ({ talles = [], talleSeleccionado, onChange }) => {
           label={`${talle.nombre} (Unidades: ${talle.stock})`}
           value={talle.nombre}
           checked={talleSeleccionado?.nombre === talle.nombre}
-          onChange={() => onChange(talle)} // 👈 guarda el objeto completo (nombre + stock)
-          disabled={talle.stock <= 0} // 👈 deshabilita si no hay stock
+          onChange={() => onChange(talle)} 
+          disabled={talle.stock <= 0} 
         />
       ))}
     </div>

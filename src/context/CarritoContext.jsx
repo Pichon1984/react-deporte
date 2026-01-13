@@ -16,7 +16,7 @@ export const CarritoProvider = ({ children }) => {
     localStorage.setItem("carrito", JSON.stringify(carrito));
   }, [carrito]);
 
-  // ➕ Agregar producto desde catálogo (ahora con envío)
+  
   const agregarProducto = (producto, talle, cantidad = 1, envio = "") => {
     if (!producto?._id) return;
 
@@ -35,13 +35,13 @@ export const CarritoProvider = ({ children }) => {
       } else {
         return [
           ...prev,
-          { productoId: producto, talle, cantidad, envio } // 🔹 guardamos envío
+          { productoId: producto, talle, cantidad, envio } 
         ];
       }
     });
   };
 
-  // ➕ Sumar unidad desde carrito (solo ID + talle + envío)
+
   const sumarUnidad = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev.map(item =>
@@ -54,7 +54,7 @@ export const CarritoProvider = ({ children }) => {
     );
   };
 
-  // ➖ Eliminar una unidad
+
   const eliminarProducto = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev
@@ -69,7 +69,7 @@ export const CarritoProvider = ({ children }) => {
     );
   };
 
-  // 🗑️ Eliminar producto completo
+
   const eliminarProductoTotal = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev.filter(
@@ -83,7 +83,7 @@ export const CarritoProvider = ({ children }) => {
     );
   };
 
-  // 🧹 Vaciar carrito
+
   const vaciarCarrito = () => setCarrito([]);
 
   return (

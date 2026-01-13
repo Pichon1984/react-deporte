@@ -11,7 +11,7 @@ const LoginComponent = () => {
   const location = useLocation();
   const { logIn } = useAuth();
 
-  // 🔹 Ruta original desde ProtectedRoute o fallback a inicio
+
   const from = location.state?.from?.pathname || "/inicio";
 
   const handleSubmit = async (e) => {
@@ -19,12 +19,12 @@ const LoginComponent = () => {
     setError(null);
 
     try {
-      // 🔹 Login request
+   
       const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, password: contraseña }),
-        credentials: "include", // siempre incluir cookies
+        credentials: "include", 
       });
 
       const data = await resp.json();
@@ -33,12 +33,10 @@ const LoginComponent = () => {
         return setError(data.msg || "Error en login");
       }
 
-      // 🔹 Guardar token en localStorage (solo en desarrollo)
+     
       if (import.meta.env.MODE !== "production" && data.token) {
         localStorage.setItem("token", data.token);
       }
-
-      // 🔹 Obtener usuario con /check
       const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
         credentials: "include",
         headers:
@@ -56,14 +54,14 @@ const LoginComponent = () => {
       const usuario = checkData.usuario;
       const token = data.token || null;
 
-      // ✅ Actualizar contexto de autenticación
+      
       logIn(usuario, token);
 
-      // ✅ Primero intenta volver a la ruta original
+     
 if (from && from !== "/inicio") {
   navigate(from, { replace: true });
 } else {
-  // 🔹 Si no hay ruta original, usa el rol como fallback
+
   if (usuario.rol === "ADMIN") {
     navigate("/admin", { replace: true });
   } else if (usuario.rol === "CLIENTE") {

@@ -10,7 +10,7 @@ const EditarPerfilModal = ({ show, onClose, datosCliente, onPerfilActualizado })
     codigoPostal: "",
   });
 
-  // 🔄 Cada vez que se abre el modal, inicializamos con los datos actuales
+  
   useEffect(() => {
     if (datosCliente && show) {
       setFormData({
@@ -46,8 +46,8 @@ const EditarPerfilModal = ({ show, onClose, datosCliente, onPerfilActualizado })
 
       const data = await resp.json();
       if (resp.ok && data.usuario) {
-        onPerfilActualizado(data.usuario); // actualiza datos en ClientePage
-        onClose(); // cierra modal
+        onPerfilActualizado(data.usuario); 
+        onClose();
       } else {
         alert(data.msg || "Error al actualizar perfil");
       }

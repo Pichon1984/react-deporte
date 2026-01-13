@@ -9,7 +9,7 @@ const ForgotPasswordPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Inicializar EmailJS con la public key
+  
   useEffect(() => {
     emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
   }, []);
@@ -21,12 +21,12 @@ const ForgotPasswordPage = () => {
     setMensaje(null);
 
     try {
-      // 👉 Llamada al backend
+     
       const resp = await forgotPassword(email);
       console.log("🔍 Respuesta backend forgotPassword:", resp);
 
       if (resp.ok && resp.data?.link) {
-        // 👉 Usar el link armado en backend (con FRONTEND_URL)
+       
         const result = await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_TEMPLATE_ID_RESET,
@@ -37,7 +37,7 @@ const ForgotPasswordPage = () => {
         );
 
         console.log("📧 Resultado envío EmailJS:", result);
-        setMensaje("Correo de recuperación enviado correctamente ✅");
+        setMensaje("Correo de recuperación enviado correctamente");
       } else {
         setError(
           resp.data?.msg ||

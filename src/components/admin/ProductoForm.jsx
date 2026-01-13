@@ -10,7 +10,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
     descripcion: '',
     tallesTexto: '',
     imagenes: [],
-    // nuevo: unidades por talle [{talle:'S', stock:10}]
+  
     tallesUnidades: [],
     ...productoInicial,
   });
@@ -19,7 +19,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
   const [cargando, setCargando] = useState(false);
   const [urlTemporal, setUrlTemporal] = useState('');
 
-  // 📌 Normalizar datos cuando llega productoInicial (para edición)
+
   useEffect(() => {
     if (productoInicial && productoInicial._id) {
       setProducto({
@@ -32,12 +32,12 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
         imagenes: productoInicial.imagenes || [],
         tallesUnidades: Array.isArray(productoInicial.tallesUnidades)
           ? productoInicial.tallesUnidades
-          : [], // si no existe, iniciamos vacío
+          : [], 
       });
     }
   }, [productoInicial]);
 
-  // 📥 Traer categorías desde backend
+  
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
@@ -55,7 +55,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
     const { name, value } = e.target;
 
     if (name === "precio") {
-      // normalizamos: quitamos puntos de miles y usamos punto como decimal
+      
       const valorNormalizado = value.replace(/\./g, "").replace(",", ".");
       setProducto(prev => ({ ...prev, precio: valorNormalizado }));
     } else {
@@ -63,7 +63,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
     }
   };
 
-  // 🧮 Helpers de talles/unidades
+  
   const agregarFilaTalle = () => {
     setProducto(prev => ({
       ...prev,
@@ -103,19 +103,19 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
       return;
     }
 
-    // talles desde texto (para compatibilidad) y consolidación con tallesUnidades
+   
     const tallesDesdeTexto = producto.tallesTexto
       ? producto.tallesTexto.split(',').map(t => t.trim()).filter(Boolean)
       : [];
 
-    // si hay tallesUnidades, derivamos talles únicos desde ahí
+  
     const tallesDesdeUnidades = (producto.tallesUnidades || [])
       .map(tu => tu.talle?.trim())
       .filter(Boolean);
 
     const tallesUnicos = Array.from(new Set([...(tallesDesdeTexto || []), ...(tallesDesdeUnidades || [])]));
 
-    // stock total (opcional): suma de unidades por talle si existen, sino el campo stock general
+  
     const stockTotal =
       (producto.tallesUnidades || []).length > 0
         ? (producto.tallesUnidades || []).reduce((acc, tu) => acc + (Number(tu.stock) || 0), 0)
@@ -129,9 +129,9 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
         talle: (tu.talle || '').trim(),
         stock: Number(tu.stock) || 0,
       })),
-      // precio normalizado a número con 2 decimales
+      
       precio: Number(parseFloat(producto.precio).toFixed(2)),
-      // stock total (si tu modelo lo usa como agregado)
+     
       stock: Number(stockTotal),
       fechaCreacion: producto.fechaCreacion || new Date().toISOString(),
     };
@@ -153,7 +153,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
     }
   };
 
-  // 📷 Subir imagen a Cloudinary
+
   const subirImagen = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -282,7 +282,7 @@ const ProductoForm = ({ productoInicial = {}, onGuardar, onCancelar }) => {
 
          
 
-          {/* 🧩 Unidades por talle */}
+       
           <Form.Group className="mb-3">
             <Form.Label>Unidades por talle</Form.Label>
             <Table bordered size="sm">

@@ -7,7 +7,7 @@ import { BsCart } from "react-icons/bs";
 import '../styles/NavigateApp.css';
 import logo from '../assets/img/logo.png';
 import SearchInput from './SearchInput';
-import { getCategorias } from '../services/api'; // 👈 servicio que trae categorías
+import { getCategorias } from '../services/api'; 
 
 export const NavigateApp = () => {
   const { carrito } = useContext(CarritoContext);
@@ -43,7 +43,7 @@ export const NavigateApp = () => {
   };
 
   const handleLogout = () => {
-    logOut(); // 👈 ya navega dentro del contexto
+    logOut(); 
   };
 
   const popover = (
@@ -95,7 +95,7 @@ export const NavigateApp = () => {
                   <NavDropdown.Item
                     key={cat._id}
                     as={NavLink}
-                    to={`/categoria/${cat._id}`} // 👈 ahora usamos _id
+                    to={`/categoria/${cat._id}`}
                   >
                     {cat.nombre}
                   </NavDropdown.Item>

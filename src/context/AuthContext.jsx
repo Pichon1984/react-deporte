@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 importar
+import { useNavigate } from "react-router-dom"; 
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -9,21 +9,21 @@ export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [token, setToken] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const navigate = useNavigate(); // 👈 hook de navegación
+  const navigate = useNavigate(); 
 
-  // 🔄 Rehidratar sesión al montar
+  //  Rehidratar sesión al montar
   useEffect(() => {
     const cargarUsuario = async () => {
       try {
         let resp;
 
         if (import.meta.env.MODE === "production") {
-          // 🔐 Producción: cookie httpOnly
+     
           resp = await fetch(`${API_URL}/api/auth/check`, {
             credentials: "include",
           });
         } else {
-          // 🛠 Desarrollo: token en localStorage
+       
           const storedToken = localStorage.getItem("token");
           if (!storedToken) {
             setCargando(false);
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     cargarUsuario();
   }, []);
 
-  // 👉 Login (solo actualiza estado con datos recibidos desde LoginComponent)
+
   const logIn = (usuarioData, tokenData) => {
     if (import.meta.env.MODE !== "production" && tokenData) {
       localStorage.setItem("token", tokenData);
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     setUsuario(usuarioData);
   };
 
-  // 👉 Logout con redirección
+
   const logOut = async () => {
     try {
       if (import.meta.env.MODE === "production") {
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUsuario(null);
       setToken(null);
-      navigate("/inicio", { replace: true }); // 👈 redirigir al inicio
+      navigate("/inicio", { replace: true }); 
     }
   };
 

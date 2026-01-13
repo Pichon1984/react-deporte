@@ -11,12 +11,12 @@ export default function Checkout() {
   const navigate = useNavigate();
   const brickControllerRef = useRef(null);
 
-  // 1️⃣ Inicializar SDK con tu Public Key
+
   useEffect(() => {
     initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "es-AR" });
   }, []);
 
-  // 2️⃣ Crear preferencia en backend (solo una vez por compraId)
+  
   useEffect(() => {
     if (!compraId) return;
 
@@ -32,8 +32,8 @@ export default function Checkout() {
         });
         const data = await res.json();
         if (data.ok) {
-          setPreferenceId(data.preferenceId); // 👈 usar preferenceId
-          setMontoTotal(Number(parseFloat(data.amount).toFixed(2))); // 👈 normalizado
+          setPreferenceId(data.preferenceId); 
+          setMontoTotal(Number(parseFloat(data.amount).toFixed(2))); 
         } else {
           console.error("❌ Error creando preferencia:", data.error);
         }
@@ -45,7 +45,7 @@ export default function Checkout() {
     crearPreferencia();
   }, [compraId]);
 
-  // 3️⃣ Renderizar Brick
+  
   useEffect(() => {
     if (!preferenceId || !montoTotal) return;
 
@@ -58,7 +58,7 @@ export default function Checkout() {
     bricksBuilder
       .create("cardPayment", "card-payment-container", {
         initialization: {
-          amount: montoTotal, // 👈 ya normalizado
+          amount: montoTotal, 
           preferenceId,
         },
         callbacks: {
@@ -100,13 +100,13 @@ export default function Checkout() {
         brickControllerRef.current = controller;
       });
 
-    // Cleanup correcto
+    
     return () => {
       if (brickControllerRef.current && typeof brickControllerRef.current.unmount === "function") {
         brickControllerRef.current.unmount();
       }
     };
-  }, [preferenceId, montoTotal]); // 👈 solo depende de preferenceId y montoTotal
+  }, [preferenceId, montoTotal]); 
 
   return (
     <div className="container py-5">

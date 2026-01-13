@@ -11,7 +11,7 @@ const ListaProductosCliente = ({ productos }) => {
   return (
     <Row>
       {productos.map((p, i) => {
-        // 👇 Log para inspeccionar cada producto
+      
         console.log("Producto en Cliente:", p);
 
         return (
@@ -28,7 +28,7 @@ const ListaProductosCliente = ({ productos }) => {
               style={{ cursor: "pointer" }}
               onClick={() => navigate(`/detalle/${p._id || p.id}`)}
             >
-              {/* ✅ Imagen usando el primer elemento del array */}
+          
               <Card.Img
                 variant="top"
                 src={p.imagenes?.[0] || "/placeholder.jpg"}
@@ -36,7 +36,7 @@ const ListaProductosCliente = ({ productos }) => {
                 style={{ height: "200px", objectFit: "contain" }}
               />
 
-              {/* Badge de stock */}
+         
               {p.stock === 0 && (
                 <span className="badge bg-danger position-absolute top-0 end-0 m-2">
                   Sin stock

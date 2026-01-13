@@ -59,7 +59,7 @@ function ListaConsultas({ productoId }) {
         )}
       </ListGroup>
 
-      {/* 📄 Paginación */}
+ 
       {totalPages > 1 && (
         <Pagination className="justify-content-center mt-3">
           {[...Array(totalPages)].map((_, i) => (

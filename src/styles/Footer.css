@@ -10,7 +10,7 @@ html, body {
 }
 
 .contenido {
-  flex: 1; /* 👈 esto empuja el footer hacia abajo */
+  flex: 1; 
 }
 
 footer {

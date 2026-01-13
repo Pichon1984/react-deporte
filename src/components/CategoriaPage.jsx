@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Spinner, Alert, Form, Pagination } from "react-bootstrap";
-import { getProductos } from "../services/api"; // 👈 usa siempre _id
+import { getProductos } from "../services/api"; 
 
 function CategoriaPage() {
-  const { id } = useParams(); // 👈 siempre recibimos el _id de la categoría
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   const [productos, setProductos] = useState([]);
@@ -42,11 +42,11 @@ function CategoriaPage() {
   };
 
   useEffect(() => {
-    console.log("ID recibido en CategoriaPage:", id); // 👈 debería ser un ObjectId válido
+    console.log("ID recibido en CategoriaPage:", id); 
     fetchProductos(1);
   }, [id]);
 
-  // 🔹 Filtrado y orden
+ 
   let productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(filtroNombre.toLowerCase())
   );
@@ -164,7 +164,7 @@ function CategoriaPage() {
             ))}
           </Row>
 
-          {/* Paginación */}
+        
           {renderPagination()}
         </>
       )}

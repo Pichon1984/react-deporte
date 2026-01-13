@@ -6,7 +6,7 @@ const AdminProductos = () => {
   const [productoEditando, setProductoEditando] = useState(null);
   const [cargando, setCargando] = useState(false);
 
-  // ✅ cargar productos
+ 
   const fetchProductos = async () => {
     const token = localStorage.getItem("token");
     setCargando(true);
@@ -29,7 +29,7 @@ const AdminProductos = () => {
     fetchProductos();
   }, []);
 
-  // ✅ guardar producto (POST vs PUT)
+
   const handleGuardar = async (producto) => {
     const token = localStorage.getItem("token");
     try {
@@ -49,7 +49,7 @@ const AdminProductos = () => {
       });
 
       if (!res.ok) throw new Error(`Error ${res.status}`);
-      await fetchProductos(); // refrescar lista
+      await fetchProductos();
       setProductoEditando(null);
     } catch (error) {
       console.error("Error guardando producto:", error);
@@ -57,7 +57,7 @@ const AdminProductos = () => {
     }
   };
 
-  // ✅ eliminar producto
+
   const handleEliminar = async (id) => {
     const token = localStorage.getItem("token");
     if (!window.confirm("¿Seguro que quieres eliminar este producto?")) return;
@@ -71,7 +71,7 @@ const AdminProductos = () => {
       });
 
       if (!res.ok) throw new Error(`Error ${res.status}`);
-      await fetchProductos(); // refrescar lista
+      await fetchProductos(); 
     } catch (error) {
       console.error("Error eliminando producto:", error);
       alert("No se pudo eliminar el producto");
@@ -82,7 +82,7 @@ const AdminProductos = () => {
     <div>
       <h2>Administrar Productos</h2>
 
-      {/* Botón para nuevo producto */}
+  
       <button
         onClick={() =>
           setProductoEditando({

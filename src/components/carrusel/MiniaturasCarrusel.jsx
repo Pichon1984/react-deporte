@@ -2,7 +2,7 @@ import React from "react";
 import { Image } from "react-bootstrap";
 
 const MiniaturasCarrusel = ({ imagenes, selectedIndex, onSelect }) => {
-  const miniaturas = imagenes.slice(0, 4); // máximo 4 miniaturas
+  const miniaturas = imagenes.slice(0, 4); 
 
   return (
     <div className="d-flex flex-wrap justify-content-center gap-2">
