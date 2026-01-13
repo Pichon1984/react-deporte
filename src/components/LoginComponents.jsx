@@ -40,10 +40,11 @@ const LoginComponent = () => {
 
       // 🔹 Obtener usuario con /check
       const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
-        credentials: "include", // en producción viaja la cookie
-        headers: import.meta.env.MODE !== "production"
-          ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
-          : {},
+        credentials: "include",
+        headers:
+          import.meta.env.MODE !== "production"
+            ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
+            : {},
       });
 
       const checkData = await checkResp.json();
@@ -58,19 +59,27 @@ const LoginComponent = () => {
       // ✅ Actualizar contexto de autenticación
       logIn(usuario, token);
 
-      // 🔹 Redirección: vuelve a la ruta original o al rol
-      if (usuario.rol === "ADMIN") {
-        navigate("/admin", { replace: true });
-      } else if (usuario.rol === "CLIENTE") {
-        navigate("/cliente", { replace: true });
-      } else {
-        navigate(from, { replace: true }); // vuelve a la ruta original o inicio
-      }
+      // ✅ Primero intenta volver a la ruta original
+if (from && from !== "/inicio") {
+  navigate(from, { replace: true });
+} else {
+  // 🔹 Si no hay ruta original, usa el rol como fallback
+  if (usuario.rol === "ADMIN") {
+    navigate("/admin", { replace: true });
+  } else if (usuario.rol === "CLIENTE") {
+    navigate("/cliente", { replace: true });
+  } else {
+    navigate("/inicio", { replace: true });
+  }
+}
+
     } catch (error) {
       console.error(error);
       setError(error.message || "Error en el servidor o CORS bloqueado");
     }
   };
+console.log("FROM STATE:", location.state);
+console.log("FROM PATH:", from);
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
