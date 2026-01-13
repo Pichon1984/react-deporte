@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const DetalleCompra = () => {
-  const { compraId } = useParams(); // 👈 el id viene de la URL
+  const { compraId } = useParams();
   const [compra, setCompra] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +47,7 @@ const DetalleCompra = () => {
 
       const data = await resp.json();
       if (resp.ok && data.init_point) {
-        window.location.href = data.init_point; // redirige al checkout de MercadoPago
+        window.location.href = data.init_point; 
       } else {
         alert("No se pudo iniciar el pago");
       }
@@ -99,7 +99,7 @@ const DetalleCompra = () => {
             <p><strong>Fecha de entrega:</strong> {new Date(compra.fechaEntrega).toLocaleDateString()}</p>
           )}
 
-          {/* Botón de pago solo si está pendiente */}
+    
           {compra.estado === "pendiente" && (
             <button className="btn btn-primary mb-3" onClick={iniciarPago}>
               💳 Pagar ahora
@@ -119,7 +119,7 @@ const DetalleCompra = () => {
             ))}
           </ul>
 
-          {/* Historial de eventos de envío */}
+         
           {compra.envioEventos && compra.envioEventos.length > 0 && (
             <>
               <h5>📦 Historial de envío</h5>

@@ -114,7 +114,7 @@ const ClientePage = () => {
     <div className="container py-4">
       <h2 className="mb-4 text-center">👋 Bienvenido, {usuario?.nombre}</h2>
 
-      {/* Datos del cliente */}
+ 
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <h4 className="card-title">📋 Mis datos</h4>
@@ -142,7 +142,7 @@ const ClientePage = () => {
         </div>
       </div>
 
-      {/* Historial de compras */}
+     
       <div className="card shadow-sm">
         <div className="card-body">
           <h4 className="card-title">🛒 Historial de compras</h4>
@@ -187,7 +187,7 @@ const ClientePage = () => {
                           className="btn btn-primary btn-sm mb-2"
                           onClick={() => iniciarPago(compra._id)}
                         >
-                          💳 Pagar
+                           Pagar
                         </button>
                       )}
 
@@ -210,7 +210,7 @@ const ClientePage = () => {
         </div>
       </div>
 
-      {/* Modal de edición */}
+      
       <EditarPerfilModal
         show={showModal}
         onClose={() => setShowModal(false)}

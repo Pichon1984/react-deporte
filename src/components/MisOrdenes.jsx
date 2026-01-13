@@ -8,7 +8,7 @@ export const MisOrdenesPage = () => {
   useEffect(() => {
     const cargarOrdenes = async () => {
       try {
-        // 👈 fetchConToken ya devuelve el JSON
+       
         const body = await fetchConToken("/api/orders/misordenes");
 
         if (body.ok) {

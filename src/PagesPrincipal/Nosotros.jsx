@@ -10,7 +10,7 @@ export const Nosotros = () => {
       <Container className="my-5">
         <h1 className="text-center mb-4">Acerca de nosotros</h1>
 
-        {/* Texto descriptivo */}
+      
         <div className="mb-5">
           <p style={{ fontSize: '1.1rem', lineHeight: '1.6', textAlign: 'center' }}>
             Somos una empresa <strong>100% nacional</strong>, con más de <strong>40 años</strong> de trayectoria en la comercialización de calzado, indumentaria y artículos deportivos. <br />
@@ -21,7 +21,7 @@ export const Nosotros = () => {
           </p>
         </div>
 
-        {/* Mapa centrado */}
+
         <div className="d-flex justify-content-center">
           <iframe
             title="Ubicación de nuestra sucursal"

@@ -5,9 +5,9 @@ function AdminConsultas() {
   const [consultas, setConsultas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [respuesta, setRespuesta] = useState({});
-  const [page, setPage] = useState(1);          // ✅ página actual
-  const [totalPages, setTotalPages] = useState(1); // ✅ total de páginas
-  const token = localStorage.getItem("token"); // ✅ obtener token desde localStorage
+  const [page, setPage] = useState(1);         
+  const [totalPages, setTotalPages] = useState(1); 
+  const token = localStorage.getItem("token"); 
 
   const fetchConsultas = async (pageNumber = 1) => {
     try {
@@ -16,7 +16,7 @@ function AdminConsultas() {
       });
       const data = await res.json();
 
-      // ✅ backend debe devolver { consultas, totalPages, currentPage }
+
       if (Array.isArray(data.consultas)) {
         setConsultas(data.consultas);
         setTotalPages(data.totalPages || 1);
@@ -121,7 +121,7 @@ function AdminConsultas() {
         </Table>
       </div>
 
-      {/* 📄 Paginación */}
+
       <Pagination className="justify-content-center mt-3">
         {[...Array(totalPages)].map((_, i) => (
           <Pagination.Item

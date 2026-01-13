@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
   const navigate = useNavigate();
 
-  // 🔹 Estado para paginación
+
   const [page, setPage] = useState(1);
-  const limit = 6; // cantidad de productos por página
+  const limit = 6; 
   const totalPages = Math.ceil(productos.length / limit);
 
   const startIndex = (page - 1) * limit;
@@ -16,7 +16,7 @@ const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
   const getImagenProducto = (p) =>
     p.imagenes?.[0] || p.img || p.imagen || "/placeholder.jpg";
 
-  // 🔹 Render de paginación
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     return (
@@ -45,16 +45,16 @@ const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "row",
-                alignItems: "center",   // 🔹 alinea imagen y texto
-                height: "180px",        // 🔹 un poco más alta para que entre todo
+                alignItems: "center",   
+                height: "180px",       
               }}
               onClick={() => navigate(`/detalle/${p._id || p.id}`)}
             >
               {/* Imagen */}
               <div
                 style={{
-                  flex: "0 0 200px",     // ancho fijo para la imagen
-                  height: "100%",        // ocupa toda la altura de la card
+                  flex: "0 0 200px",     
+                  height: "100%",     
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -68,18 +68,18 @@ const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "contain", // 🔹 evita distorsión
+                    objectFit: "contain", 
                   }}
                 />
               </div>
 
-              {/* Info */}
+           
               <Card.Body
                 style={{
                   flex: "1 1 auto",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "center", // 🔹 centra verticalmente el texto
+                  justifyContent: "center", 
                 }}
               >
                 <Card.Title className="mb-1">{p.nombre}</Card.Title>
@@ -119,7 +119,7 @@ const ListaProductosAdmin = ({ productos, onEditar, onEliminar }) => {
         ))}
       </Row>
 
-      {/* Paginación */}
+
       {renderPagination()}
     </>
   );

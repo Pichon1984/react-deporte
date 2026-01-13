@@ -3,7 +3,7 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { CarritoContext } from "../context/CarritoContext";
 import { BsTrash } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // 👈 importar el hook
+import { useAuth } from "../context/AuthContext"; 
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -16,11 +16,11 @@ const CarritoPage = () => {
     eliminarProductoTotal
   } = useContext(CarritoContext);
 
-  const { usuario, token, cargando } = useAuth(); // 👈 usar el contexto
+  const { usuario, token, cargando } = useAuth(); 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // 🛒 Subtotal de productos
+
   const calcularTotal = () =>
     carrito.reduce(
       (total, item) =>
@@ -28,7 +28,7 @@ const CarritoPage = () => {
       0
     );
 
-  // 🚚 cálculo proporcional de envío
+ 
   function calcularEnvio(subtotal) {
     const ENVIO_BASE = 30000;
     const LIMITE_ENVIO_GRATIS = 200000;
@@ -37,13 +37,13 @@ const CarritoPage = () => {
     return Math.max(ENVIO_BASE - descuento, 0);
   }
 
-  // 👉 Confirmar compra → flujo único con Brick
+  
   async function confirmarCarrito() {
     try {
       setLoading(true);
 
       if (!usuario) {
-        // 🚨 Si no está logeado → redirigir al login y volver al carrito después
+     
         localStorage.setItem("redirectAfterLogin", "/carrito");
         navigate("/cuenta");
         return;
@@ -68,7 +68,7 @@ const CarritoPage = () => {
 
       const envio = { metodo: "domicilio", nombre: usuario.nombre, email: usuario.correo };
 
-      // 1️⃣ Crear Orden
+   
       const ordenRes = await fetch(`${API_URL}/api/ordenes/checkout`, {
         method: "POST",
         headers,
@@ -78,7 +78,7 @@ const CarritoPage = () => {
       const ordenData = await ordenRes.json();
       if (!ordenRes.ok || !ordenData.ordenId) return;
 
-      // 2️⃣ Crear Compra
+   
       const compraRes = await fetch(`${API_URL}/api/compras`, {
         method: "POST",
         headers,

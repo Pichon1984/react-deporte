@@ -22,10 +22,10 @@ const Registro = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // 👉 Validaciones frontend
+ 
   const validarCorreo = (correo) => /^\S+@\S+\.\S+$/.test(correo);
 
-  // Reglas de contraseña
+
   const reglasPassword = [
     { test: (p) => p.length >= 8, msg: "Mínimo 8 caracteres" },
     { test: (p) => /[A-Z]/.test(p), msg: "Al menos una mayúscula" },
@@ -88,7 +88,7 @@ const Registro = () => {
       <div className="card shadow-lg p-4" style={{ maxWidth: "600px", width: "100%" }}>
         <h2 className="text-center mb-4">Registro</h2>
         <form onSubmit={handleSubmit} className="row g-3">
-          {/* Campos básicos */}
+       
           <div className="col-md-6">
             <label htmlFor="nombre" className="form-label">Nombre</label>
             <input type="text" className="form-control" id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
@@ -113,7 +113,6 @@ const Registro = () => {
             </ul>
           </div>
 
-          {/* Otros campos */}
           <div className="col-md-6">
             <label htmlFor="telefono" className="form-label">Teléfono</label>
             <input type="text" className="form-control" id="telefono" name="telefono" value={form.telefono} onChange={handleChange} />

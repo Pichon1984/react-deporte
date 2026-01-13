@@ -7,7 +7,7 @@ const AdminUsuarios = () => {
   const [sugerencias, setSugerencias] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [tab, setTab] = useState("activos"); // solapa actual
+  const [tab, setTab] = useState("activos"); 
 
   const fetchUsuarios = async (searchTerm = "", pageNumber = 1) => {
     try {
@@ -36,7 +36,6 @@ const AdminUsuarios = () => {
     fetchUsuarios(search, page);
   }, [page]);
 
-  // 🔍 Autocomplete en vivo
   const handleChange = async (e) => {
     const value = e.target.value;
     setSearch(value);
@@ -55,7 +54,7 @@ const AdminUsuarios = () => {
         setSugerencias([]);
       }
     } else {
-      // 🔄 si se borra la búsqueda, mostrar todos
+     
       setSugerencias([]);
       fetchUsuarios("", 1);
     }
@@ -64,7 +63,7 @@ const AdminUsuarios = () => {
   const handleSelectSugerencia = (cliente) => {
     setSearch(cliente.correo);
     setSugerencias([]);
-    setUsuarios([cliente]); // mostrar solo ese cliente
+    setUsuarios([cliente]); 
   };
 
   const handleBloquear = async (id, estado) => {
@@ -101,7 +100,7 @@ const AdminUsuarios = () => {
     }
   };
 
-  // Filtrar según solapa
+
   const usuariosFiltrados = usuarios.filter((u) =>
     tab === "activos" ? u.estado === true : u.estado === false
   );
@@ -112,7 +111,7 @@ const AdminUsuarios = () => {
         <Col xs={12} md={10} lg={8}>
           <h3 className="mb-4 text-center">Usuarios Registrados</h3>
 
-          {/* 🔍 Buscador con autocomplete */}
+        
           <Form className="mb-3">
             <Form.Control
               type="text"
@@ -135,13 +134,13 @@ const AdminUsuarios = () => {
             )}
           </Form>
 
-          {/* 🗂 Tabs Activos/Bloqueados */}
+      
           <Tabs activeKey={tab} onSelect={(k) => setTab(k)} className="mb-3">
             <Tab eventKey="activos" title="Activos" />
             <Tab eventKey="bloqueados" title="Bloqueados" />
           </Tabs>
 
-          {/* 🧾 Tabla */}
+      
           <div className="table-responsive">
             <Table striped bordered>
               <thead>
@@ -192,7 +191,7 @@ const AdminUsuarios = () => {
             </Table>
           </div>
 
-          {/* 📄 Paginación */}
+       
           <Pagination className="justify-content-center mt-3">
             {[...Array(totalPages)].map((_, i) => (
               <Pagination.Item

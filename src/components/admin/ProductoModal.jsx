@@ -13,14 +13,13 @@ const ProductoModal = ({ show, onHide, producto, onGuardar }) => {
         <ProductoForm
           productoInicial={producto}
           onGuardar={(nuevo) => {
-            // ✅ aseguramos que se envíe el _id de la categoría
+       
             const productoFinal = {
               ...nuevo,
-              categoria: nuevo.categoria, // ya es el _id seleccionado en el <Form.Select>
+              categoria: nuevo.categoria, 
             };
             onGuardar(productoFinal);
-            // ❌ no cerramos aquí el modal
-            // ✅ dejamos que Admin.jsx lo cierre cuando el guardado sea exitoso
+          
           }}
           onCancelar={onHide}
         />

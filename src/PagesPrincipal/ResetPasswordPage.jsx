@@ -20,7 +20,7 @@ const ResetPasswordPage = () => {
     }
   }, [token]);
 
-  // 👉 Reglas de validación de contraseña
+
   const reglasPassword = [
     { test: (p) => p.length >= 8, msg: "Mínimo 8 caracteres" },
     { test: (p) => /[A-Z]/.test(p), msg: "Al menos una mayúscula" },
@@ -33,7 +33,7 @@ const ResetPasswordPage = () => {
     setError(null);
     setMensaje(null);
 
-    // Validar reglas
+   
     const cumpleTodas = reglasPassword.every((r) => r.test(newPassword));
     if (!cumpleTodas) {
       setError("La contraseña no cumple las reglas de seguridad.");
@@ -53,9 +53,9 @@ const ResetPasswordPage = () => {
       if (resp.ok) {
         setMensaje(resp.data.msg || "Contraseña actualizada correctamente");
 
-        // Redirige al login/cuenta después de 2 segundos
+       
         setTimeout(() => {
-          navigate("/cuenta"); // 👈 asegúrate que esta ruta exista en tu router
+          navigate("/cuenta");
         }, 2000);
       } else {
         setError(resp.data?.msg || "No se pudo actualizar la contraseña.");

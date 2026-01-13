@@ -8,7 +8,7 @@ const PagoMercadoPago = () => {
   useEffect(() => {
     async function initBrick() {
       try {
-        // 1️⃣ Pedir preferencia al backend
+     
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pagos/crear/${compraId}`, {
           method: "POST",
         });
@@ -19,12 +19,11 @@ const PagoMercadoPago = () => {
           return;
         }
 
-        // 2️⃣ Inicializar MercadoPago
+    
         const mp = new window.MercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, {
           locale: "es-AR",
         });
 
-        // 3️⃣ Crear Brick
         mp.bricks().create("cardPayment", "card-payment-container", {
           initialization: {
             amount: data.amount,
@@ -77,7 +76,7 @@ const PagoMercadoPago = () => {
 
     initBrick();
 
-    // Cleanup para evitar duplicados
+    
     return () => {
       const container = document.getElementById("card-payment-container");
       if (container) container.innerHTML = "";

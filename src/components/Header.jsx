@@ -11,7 +11,6 @@ function Header({ token }) {
           const lon = pos.coords.longitude;
 
           try {
-            // 1️⃣ Obtener dirección con Nominatim
             const resp = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
             );
@@ -28,12 +27,12 @@ function Header({ token }) {
             const textoUbicacion = `Estás en ${ciudad}, ${provincia}, ${pais}`;
             setUbicacion(textoUbicacion);
 
-            // 2️⃣ Guardar en backend usando x-token
+           
             await fetch("/api/usuarios/ubicacion", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "x-token": token // 👈 tu JWT va en x-token
+                "x-token": token 
               },
               body: JSON.stringify({
                 ciudad,

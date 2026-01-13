@@ -16,7 +16,7 @@ const Admin = () => {
   const [showModal, setShowModal] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
-  // ✅ Cargar productos al iniciar
+
   useEffect(() => {
     const fetchProductos = async () => {
       const token = localStorage.getItem("token");
@@ -36,21 +36,21 @@ const Admin = () => {
     fetchProductos();
   }, []);
 
-  // ✅ Guardar producto (nuevo o edición)
+
 const handleGuardar = async (producto) => {
   const token = localStorage.getItem("token");
   if (!token) return;
   try {
     let res;
     if (producto._id) {
-      // EDITAR
+     
       res = await fetch(`${API_URL}/api/productos/${producto._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "x-token": token },
         body: JSON.stringify(producto),
       });
     } else {
-      // CREAR
+    
       res = await fetch(`${API_URL}/api/productos`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-token": token },
@@ -71,18 +71,17 @@ const handleGuardar = async (producto) => {
         : [...prev, productoGuardado]
     );
 
-    // ✅ Solo cerramos el modal si todo salió bien
+  
     setShowModal(false);
     setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
   } catch (error) {
     console.error("❌ Error guardando producto:", error);
-    // ❌ No cerramos el modal si hay error
     setMensaje({ tipo: "danger", texto: error.message || "Error guardando producto" });
   }
 };
 
 
-  // ✅ Eliminar producto
+
   const handleEliminar = async (id) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -102,7 +101,7 @@ const handleGuardar = async (producto) => {
     }
   };
 
-  // ✅ Filtrar productos
+ 
   const productosFiltrados = productos.filter((p) => {
     const coincideNombre = filtros.nombre
       ? p.nombre.toLowerCase().includes(filtros.nombre.toLowerCase())
@@ -131,7 +130,7 @@ const handleGuardar = async (producto) => {
       )}
 
       <Row>
-        {/* Sidebar */}
+    
         <Col xs={12} md={3} className="mb-3">
           <div className="d-flex flex-wrap flex-md-column gap-2">
             <Button
@@ -165,7 +164,7 @@ const handleGuardar = async (producto) => {
           </div>
         </Col>
 
-        {/* Contenido dinámico */}
+  
         <Col xs={12} md={9}>
           {seccion === "productos" && (
             <>
