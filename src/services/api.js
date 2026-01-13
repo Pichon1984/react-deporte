@@ -4,6 +4,7 @@ const API_URL =
     ? "http://localhost:3000"
     : "https://base-datos-deporte.vercel.app");
 
+// 🔹 Manejo de respuestas
 async function handleResponse(res) {
   let data;
   try {
@@ -19,7 +20,7 @@ async function handleResponse(res) {
   return { ok: true, status: res.status, data };
 }
 
-
+// 🔹 Headers con token opcional
 function getHeaders(token) {
   return {
     "Content-Type": "application/json",
@@ -27,9 +28,9 @@ function getHeaders(token) {
   };
 }
 
-
+// --- Endpoints de Productos ---
 export async function getProductos(categoriaId, page = 1, limit = 12) {
- 
+  // ✅ Ruta correcta: /api/categorias/:id/productos
   const url = `${API_URL}/api/categorias/${categoriaId}/productos?page=${page}&limit=${limit}`;
   const res = await fetch(url);
   return handleResponse(res);
@@ -40,12 +41,13 @@ export async function getProductoById(id) {
   return handleResponse(res);
 }
 
+// --- Endpoints de Categorías ---
 export async function getCategorias() {
   const res = await fetch(`${API_URL}/api/categorias`);
   return handleResponse(res);
 }
 
-
+// --- Endpoints de Auth ---
 export async function register(datos) {
   const res = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
@@ -64,8 +66,9 @@ export async function login(correo, password) {
   return handleResponse(res);
 }
 
+// --- Perfil del usuario autenticado ---
 export async function getProfile(token) {
- 
+  // ✅ Tu backend expone /api/usuarios/me
   const res = await fetch(`${API_URL}/api/usuarios/me`, {
     headers: getHeaders(token),
   });
@@ -90,7 +93,7 @@ export async function resetPassword(token, newPassword) {
   return handleResponse(res);
 }
 
-
+// --- Endpoints de Carrito ---
 export async function getCarrito(token) {
   const res = await fetch(`${API_URL}/api/carrito`, {
     headers: getHeaders(token),
@@ -115,5 +118,5 @@ export async function removeFromCarrito(token, productoId) {
   return handleResponse(res);
 }
 
-
+// 🔹 Exporta la constante para que otros componentes puedan usarla
 export { API_URL };
