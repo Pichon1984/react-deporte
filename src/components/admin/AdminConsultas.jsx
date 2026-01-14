@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Form, Spinner, Pagination } from "react-bootstrap";
-import { getConsultas, responderConsulta, deleteConsulta } from "../../services/api";
+import { API_URL } from "../../services/api";
+import { fetchConToken } from "../../helpers/fetchConToken"; // 🔹 Importa tu helper
 
 function AdminConsultas() {
   const [consultas, setConsultas] = useState([]);
@@ -12,7 +13,7 @@ function AdminConsultas() {
   const fetchConsultas = async (pageNumber = 1) => {
     try {
       setLoading(true);
-      const res = await getConsultas(pageNumber, 10);
+      const res = await fetchConToken(`${API_URL}/api/consultas/todas?page=${pageNumber}&limit=10`);
       if (res.ok) {
         setConsultas(res.data.consultas || []);
         setTotalPages(res.data.totalPages || 1);
@@ -34,7 +35,11 @@ function AdminConsultas() {
 
   const handleResponder = async (consultaId) => {
     try {
-      const res = await responderConsulta(consultaId, respuesta[consultaId]);
+      const res = await fetchConToken(`${API_URL}/api/consultas/${consultaId}/responder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ respuesta: respuesta[consultaId] }),
+      });
       if (res.ok) {
         setConsultas((prev) =>
           prev.map((c) => (c._id === consultaId ? res.data.consulta : c))
@@ -50,7 +55,9 @@ function AdminConsultas() {
   const handleEliminar = async (consultaId) => {
     if (!window.confirm("¿Eliminar esta consulta?")) return;
     try {
-      const res = await deleteConsulta(consultaId);
+      const res = await fetchConToken(`${API_URL}/api/consultas/${consultaId}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         setConsultas((prev) => prev.filter((c) => c._id !== consultaId));
       } else {
@@ -149,4 +156,5 @@ function AdminConsultas() {
 }
 
 export default AdminConsultas;
+
 
