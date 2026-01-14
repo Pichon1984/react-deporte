@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 export const AuthContext = createContext();
 
@@ -11,21 +11,21 @@ export const AuthProvider = ({ children }) => {
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
-  // 🔹 Función para refrescar token
   const refreshToken = async () => {
     try {
       const resp = await fetch(`${API_URL}/api/auth/refresh`, {
         method: "POST",
-        credentials: "include", // en producción usa cookies
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: import.meta.env.MODE !== "production"
-          ? JSON.stringify({ refreshToken: localStorage.getItem("refreshToken") })
-          : undefined,
+        body:
+          import.meta.env.MODE !== "production"
+            ? JSON.stringify({ refreshToken: localStorage.getItem("refreshToken") })
+            : undefined,
       });
 
       if (resp.ok) {
         const data = await resp.json();
-        const newToken = data.token;
+        const newToken = data.token || data.accessToken;
 
         if (import.meta.env.MODE !== "production" && newToken) {
           localStorage.setItem("token", newToken);
@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  // 🔹 Rehidratar sesión al montar
   useEffect(() => {
     const cargarUsuario = async () => {
       try {
@@ -83,10 +82,9 @@ export const AuthProvider = ({ children }) => {
           };
           setUsuario(usuarioData);
         } else if (resp.status === 401) {
-          // 🔹 Si el token expiró, intentar refresh
           const refreshed = await refreshToken();
           if (refreshed) {
-            return cargarUsuario(); // reintenta cargar usuario
+            return cargarUsuario();
           }
           setUsuario(null);
           setToken(null);
