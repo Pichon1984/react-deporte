@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import EditarPerfilModal from "../components/EditarPerfilModal";
+import { fetchConToken } from "../helpers/fetchConToken"; // 🔹 Importa tu helper
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -21,20 +22,9 @@ const ClientePage = () => {
 
     const cargarDatosCliente = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const resp = await fetch(`${API_URL}/api/usuarios/me`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(import.meta.env.MODE !== "production" && token
-              ? { "x-token": token }
-              : {}),
-          },
-          credentials: "include",
-        });
-
-        const data = await resp.json();
-        if (resp.ok && data.usuario) {
-          setDatosCliente(data.usuario);
+        const resp = await fetchConToken(`${API_URL}/api/usuarios/me`);
+        if (resp.ok && resp.data.usuario) {
+          setDatosCliente(resp.data.usuario);
         }
       } catch (error) {
         console.error("Error cargando datos del cliente:", error);
@@ -43,20 +33,9 @@ const ClientePage = () => {
 
     const cargarCompras = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const resp = await fetch(`${API_URL}/api/compras/mias`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(import.meta.env.MODE !== "production" && token
-              ? { "x-token": token }
-              : {}),
-          },
-          credentials: "include",
-        });
-
-        const data = await resp.json();
-        if (resp.ok && data.ok) {
-          setMisCompras(data.compras || []);
+        const resp = await fetchConToken(`${API_URL}/api/compras/mias`);
+        if (resp.ok && resp.data.ok) {
+          setMisCompras(resp.data.compras || []);
         } else {
           setMisCompras([]);
         }
@@ -72,21 +51,11 @@ const ClientePage = () => {
 
   const iniciarPago = async (compraId) => {
     try {
-      const token = localStorage.getItem("token");
-      const resp = await fetch(`${API_URL}/api/pagos/crear/${compraId}`, {
+      const resp = await fetchConToken(`${API_URL}/api/pagos/crear/${compraId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(import.meta.env.MODE !== "production" && token
-            ? { "x-token": token }
-            : {}),
-        },
-        credentials: "include",
       });
-
-      const data = await resp.json();
-      if (resp.ok && data.init_point) {
-        window.location.href = data.init_point;
+      if (resp.ok && resp.data.init_point) {
+        window.location.href = resp.data.init_point;
       } else {
         alert("No se pudo iniciar el pago");
       }
@@ -114,7 +83,6 @@ const ClientePage = () => {
     <div className="container py-4">
       <h2 className="mb-4 text-center">👋 Bienvenido, {usuario?.nombre}</h2>
 
- 
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <h4 className="card-title">📋 Mis datos</h4>
@@ -142,7 +110,6 @@ const ClientePage = () => {
         </div>
       </div>
 
-     
       <div className="card shadow-sm">
         <div className="card-body">
           <h4 className="card-title">🛒 Historial de compras</h4>
@@ -187,7 +154,7 @@ const ClientePage = () => {
                           className="btn btn-primary btn-sm mb-2"
                           onClick={() => iniciarPago(compra._id)}
                         >
-                           Pagar
+                          Pagar
                         </button>
                       )}
 
@@ -210,7 +177,6 @@ const ClientePage = () => {
         </div>
       </div>
 
-      
       <EditarPerfilModal
         show={showModal}
         onClose={() => setShowModal(false)}

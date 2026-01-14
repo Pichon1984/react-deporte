@@ -7,6 +7,7 @@ import AdminUsuarios from "../components/admin/AdminUsuarios";
 import AdminConsultas from "../components/admin/AdminConsultas";
 import AdminCompras from "../components/admin/AdminCompras";
 import { API_URL } from "../services/api";
+import { fetchConToken } from "../helpers/fetchConToken"; // 🔹 Importa tu helper
 
 const Admin = () => {
   const [seccion, setSeccion] = useState("productos");
@@ -16,19 +17,18 @@ const Admin = () => {
   const [showModal, setShowModal] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
-
   useEffect(() => {
     const fetchProductos = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch(`${API_URL}/api/productos`, {
-          headers: { "x-token": token }
-        });
-        const data = await res.json();
-        const productosArray = Array.isArray(data) ? data : data.productos || [];
-        setProductos(productosArray);
-        setMensaje({ tipo: "success", texto: "Productos cargados correctamente" });
+        const res = await fetchConToken(`${API_URL}/api/productos`);
+        if (res.ok) {
+          const data = res.data;
+          const productosArray = Array.isArray(data) ? data : data.productos || [];
+          setProductos(productosArray);
+          setMensaje({ tipo: "success", texto: "Productos cargados correctamente" });
+        } else {
+          setMensaje({ tipo: "danger", texto: "Error cargando productos" });
+        }
       } catch (error) {
         setMensaje({ tipo: "danger", texto: "Error cargando productos" });
       }
@@ -36,63 +36,50 @@ const Admin = () => {
     fetchProductos();
   }, []);
 
+  const handleGuardar = async (producto) => {
+    try {
+      let res;
+      if (producto._id) {
+        res = await fetchConToken(`${API_URL}/api/productos/${producto._id}`, {
+          method: "PUT",
+          body: JSON.stringify(producto),
+          headers: { "Content-Type": "application/json" },
+        });
+      } else {
+        res = await fetchConToken(`${API_URL}/api/productos`, {
+          method: "POST",
+          body: JSON.stringify(producto),
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
-const handleGuardar = async (producto) => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-  try {
-    let res;
-    if (producto._id) {
-     
-      res = await fetch(`${API_URL}/api/productos/${producto._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "x-token": token },
-        body: JSON.stringify(producto),
-      });
-    } else {
-    
-      res = await fetch(`${API_URL}/api/productos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-token": token },
-        body: JSON.stringify(producto),
-      });
+      if (!res.ok) {
+        throw new Error(res.data.error || "Error en la operación");
+      }
+
+      const productoGuardado = res.data.producto || res.data;
+
+      setProductos((prev) =>
+        producto._id
+          ? prev.map((p) => (p._id === producto._id ? productoGuardado : p))
+          : [...prev, productoGuardado]
+      );
+
+      setShowModal(false);
+      setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
+    } catch (error) {
+      console.error("❌ Error guardando producto:", error);
+      setMensaje({ tipo: "danger", texto: error.message || "Error guardando producto" });
     }
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Error en la operación");
-    }
-
-    const productoGuardado = data.producto || data;
-
-    setProductos((prev) =>
-      producto._id
-        ? prev.map((p) => (p._id === producto._id ? productoGuardado : p))
-        : [...prev, productoGuardado]
-    );
-
-  
-    setShowModal(false);
-    setMensaje({ tipo: "success", texto: "Producto guardado correctamente" });
-  } catch (error) {
-    console.error("❌ Error guardando producto:", error);
-    setMensaje({ tipo: "danger", texto: error.message || "Error guardando producto" });
-  }
-};
-
-
+  };
 
   const handleEliminar = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     if (!window.confirm("¿Eliminar este producto?")) return;
     try {
-      const res = await fetch(`${API_URL}/api/productos/${id}`, {
+      const res = await fetchConToken(`${API_URL}/api/productos/${id}`, {
         method: "DELETE",
-        headers: { "x-token": token }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+      if (!res.ok) throw new Error(res.data.error || `Error ${res.status}`);
       setProductos((prev) => prev.filter((p) => p._id !== id));
       setMensaje({ tipo: "success", texto: "Producto eliminado correctamente" });
     } catch (error) {
@@ -101,7 +88,6 @@ const handleGuardar = async (producto) => {
     }
   };
 
- 
   const productosFiltrados = productos.filter((p) => {
     const coincideNombre = filtros.nombre
       ? p.nombre.toLowerCase().includes(filtros.nombre.toLowerCase())
@@ -130,7 +116,6 @@ const handleGuardar = async (producto) => {
       )}
 
       <Row>
-    
         <Col xs={12} md={3} className="mb-3">
           <div className="d-flex flex-wrap flex-md-column gap-2">
             <Button
@@ -164,7 +149,6 @@ const handleGuardar = async (producto) => {
           </div>
         </Col>
 
-  
         <Col xs={12} md={9}>
           {seccion === "productos" && (
             <>
