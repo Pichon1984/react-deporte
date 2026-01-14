@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { Table, Form, Row, Col, Button, Alert, Spinner, Pagination } from "react-bootstrap";
 
-
-import { getCompras, confirmarPago, actualizarEnvio } from "../../services/api";
+import { API_URL } from "../../services/api";
+import { fetchConToken } from "../../helpers/fetchConToken"; // 🔹 Importa tu helper
 
 const AdminCompras = () => {
   const [compras, setCompras] = useState([]);
@@ -26,7 +26,9 @@ const AdminCompras = () => {
   const fetchCompras = async (pagina = 1) => {
     try {
       setLoading(true);
-      const res = await getCompras(pagina, limit, filtros);
+      const res = await fetchConToken(
+        `${API_URL}/api/compras?page=${pagina}&limit=${limit}&estado=${filtros.estado}&desde=${filtros.desde}&hasta=${filtros.hasta}`
+      );
       if (res.ok) {
         setCompras(Array.isArray(res.data.compras) ? res.data.compras : []);
         setPage(res.data.page || pagina);
@@ -65,7 +67,9 @@ const AdminCompras = () => {
 
   const confirmarPagoHandler = async (id) => {
     try {
-      const res = await confirmarPago(id);
+      const res = await fetchConToken(`${API_URL}/api/compras/${id}/confirmar-pago`, {
+        method: "PUT",
+      });
       if (res.ok) {
         setCompras((prev) =>
           prev.map((c) => (c._id === id ? res.data.compra : c))
@@ -81,10 +85,14 @@ const AdminCompras = () => {
 
   const guardarEnvio = async (compra) => {
     try {
-      const res = await actualizarEnvio(compra._id, {
-        estadoEnvio: compra.estadoEnvio,
-        trackingNumber: compra.trackingNumber || "",
-        courier: compra.courier || "",
+      const res = await fetchConToken(`${API_URL}/api/compras/${compra._id}/envio`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          estadoEnvio: compra.estadoEnvio,
+          trackingNumber: compra.trackingNumber || "",
+          courier: compra.courier || "",
+        }),
       });
       if (res.ok) {
         setCompras((prev) =>
@@ -140,7 +148,9 @@ const AdminCompras = () => {
       </div>
     );
   }
- return (
+
+
+  return (
     <div className="mt-3">
       <h3>Compras de clientes</h3>
 
@@ -231,7 +241,7 @@ const AdminCompras = () => {
                           ? "bg-secondary"
                           : "bg-warning text-dark"
                       }`}
- >
+                    >
                       {compra.estado}
                     </span>
                     <Button

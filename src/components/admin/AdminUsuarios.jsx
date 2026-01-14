@@ -12,12 +12,8 @@ import {
   Tab,
 } from "react-bootstrap";
 
-
-import {
-  getUsuarios,
-  updateUsuarioEstado,
-  deleteUsuario,
-} from "../../services/api"; 
+import { API_URL } from "../../services/api";
+import { fetchConToken } from "../../helpers/fetchConToken"; // 🔹 Importa tu helper
 
 const AdminUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -27,10 +23,11 @@ const AdminUsuarios = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [tab, setTab] = useState("activos");
 
-
   const fetchUsuarios = async (searchTerm = "", pageNumber = 1) => {
     try {
-      const res = await getUsuarios(pageNumber, 10, searchTerm);
+      const res = await fetchConToken(
+        `${API_URL}/api/usuarios?page=${pageNumber}&limit=10&search=${searchTerm}`
+      );
       if (res.ok) {
         setUsuarios(res.data.usuarios || []);
         setTotalPages(res.data.totalPages || 1);
@@ -48,14 +45,15 @@ const AdminUsuarios = () => {
     fetchUsuarios(search, page);
   }, [page]);
 
-  
   const handleChange = async (e) => {
     const value = e.target.value;
     setSearch(value);
 
     if (value.length > 1) {
       try {
-        const res = await getUsuarios(1, 5, value);
+        const res = await fetchConToken(
+          `${API_URL}/api/usuarios?page=1&limit=5&search=${value}`
+        );
         if (res.ok) {
           setSugerencias(res.data.usuarios || []);
         }
@@ -75,10 +73,13 @@ const AdminUsuarios = () => {
     setUsuarios([cliente]);
   };
 
-  
   const handleBloquear = async (id, estado) => {
     try {
-      const res = await updateUsuarioEstado(id, !estado);
+      const res = await fetchConToken(`${API_URL}/api/usuarios/${id}/estado`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: !estado }),
+      });
       if (res.ok) {
         setUsuarios((prev) =>
           prev.map((u) => (u._id === id ? { ...u, ...res.data.usuario } : u))
@@ -89,11 +90,12 @@ const AdminUsuarios = () => {
     }
   };
 
-
   const handleEliminar = async (id) => {
     if (!window.confirm("¿Eliminar este usuario?")) return;
     try {
-      const res = await deleteUsuario(id);
+      const res = await fetchConToken(`${API_URL}/api/usuarios/${id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         setUsuarios((prev) => prev.filter((u) => u._id !== id));
       }
@@ -112,7 +114,6 @@ const AdminUsuarios = () => {
         <Col xs={12} md={10} lg={8}>
           <h3 className="mb-4 text-center">Usuarios Registrados</h3>
 
-        
           <Form className="mb-3">
             <Form.Control
               type="text"
@@ -135,13 +136,11 @@ const AdminUsuarios = () => {
             )}
           </Form>
 
-    
           <Tabs activeKey={tab} onSelect={(k) => setTab(k)} className="mb-3">
             <Tab eventKey="activos" title="Activos" />
             <Tab eventKey="bloqueados" title="Bloqueados" />
           </Tabs>
 
-     
           <div className="table-responsive">
             <Table striped bordered>
               <thead>
@@ -212,5 +211,3 @@ const AdminUsuarios = () => {
 };
 
 export default AdminUsuarios;
-
-
