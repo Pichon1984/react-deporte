@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -9,21 +9,47 @@ export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [token, setToken] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
-  //  Rehidratar sesión al montar
+  // 🔹 Función para refrescar token
+  const refreshToken = async () => {
+    try {
+      const resp = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: "POST",
+        credentials: "include", // en producción usa cookies
+        headers: { "Content-Type": "application/json" },
+        body: import.meta.env.MODE !== "production"
+          ? JSON.stringify({ refreshToken: localStorage.getItem("refreshToken") })
+          : undefined,
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const newToken = data.token;
+
+        if (import.meta.env.MODE !== "production" && newToken) {
+          localStorage.setItem("token", newToken);
+          setToken(newToken);
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error("❌ Error en refresh:", err);
+    }
+    return false;
+  };
+
+  // 🔹 Rehidratar sesión al montar
   useEffect(() => {
     const cargarUsuario = async () => {
       try {
         let resp;
 
         if (import.meta.env.MODE === "production") {
-     
           resp = await fetch(`${API_URL}/api/auth/check`, {
             credentials: "include",
           });
         } else {
-       
           const storedToken = localStorage.getItem("token");
           if (!storedToken) {
             setCargando(false);
@@ -56,6 +82,14 @@ export const AuthProvider = ({ children }) => {
             dni: u.dni,
           };
           setUsuario(usuarioData);
+        } else if (resp.status === 401) {
+          // 🔹 Si el token expiró, intentar refresh
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            return cargarUsuario(); // reintenta cargar usuario
+          }
+          setUsuario(null);
+          setToken(null);
         } else {
           setUsuario(null);
           setToken(null);
@@ -72,15 +106,18 @@ export const AuthProvider = ({ children }) => {
     cargarUsuario();
   }, []);
 
-
-  const logIn = (usuarioData, tokenData) => {
-    if (import.meta.env.MODE !== "production" && tokenData) {
-      localStorage.setItem("token", tokenData);
-      setToken(tokenData);
+  const logIn = (usuarioData, tokenData, refreshData) => {
+    if (import.meta.env.MODE !== "production") {
+      if (tokenData) {
+        localStorage.setItem("token", tokenData);
+        setToken(tokenData);
+      }
+      if (refreshData) {
+        localStorage.setItem("refreshToken", refreshData);
+      }
     }
     setUsuario(usuarioData);
   };
-
 
   const logOut = async () => {
     try {
@@ -91,13 +128,14 @@ export const AuthProvider = ({ children }) => {
         });
       } else {
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
       }
     } catch (err) {
       console.error("❌ Error en logout:", err);
     } finally {
       setUsuario(null);
       setToken(null);
-      navigate("/inicio", { replace: true }); 
+      navigate("/inicio", { replace: true });
     }
   };
 
@@ -109,4 +147,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

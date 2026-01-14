@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { Table, Form, Row, Col, Button, Alert, Spinner, Pagination } from "react-bootstrap";
-import { ComprasService } from "../../services/compras";
+
+
+import { getCompras, confirmarPago, actualizarEnvio } from "../../services/api";
 
 const AdminCompras = () => {
   const [compras, setCompras] = useState([]);
@@ -10,7 +12,7 @@ const AdminCompras = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const limit = 10; 
+  const limit = 10;
 
   const queryParamsBase = useMemo(() => {
     const qp = new URLSearchParams();
@@ -24,14 +26,18 @@ const AdminCompras = () => {
   const fetchCompras = async (pagina = 1) => {
     try {
       setLoading(true);
-      const qp = new URLSearchParams(queryParamsBase.toString());
-      qp.set("page", pagina);
-
-      const data = await ComprasService.list(); 
-      setCompras(Array.isArray(data.compras) ? data.compras : []);
-      setPage(data.page || pagina);
-      setTotalPages(data.totalPages || 1);
-      setMensaje({ tipo: "success", texto: "Compras cargadas correctamente" });
+      const res = await getCompras(pagina, limit, filtros);
+      if (res.ok) {
+        setCompras(Array.isArray(res.data.compras) ? res.data.compras : []);
+        setPage(res.data.page || pagina);
+        setTotalPages(res.data.totalPages || 1);
+        setMensaje({ tipo: "success", texto: "Compras cargadas correctamente" });
+      } else {
+        setMensaje({ tipo: "danger", texto: "Error al cargar compras" });
+        setCompras([]);
+        setPage(1);
+        setTotalPages(1);
+      }
     } catch (error) {
       setMensaje({ tipo: "danger", texto: "Error al cargar compras" });
       setCompras([]);
@@ -44,7 +50,6 @@ const AdminCompras = () => {
 
   useEffect(() => {
     fetchCompras(1);
-   
   }, []);
 
   const aplicarFiltros = () => {
@@ -58,27 +63,37 @@ const AdminCompras = () => {
     fetchCompras(p);
   };
 
-
-  const confirmarPago = async (id) => {
+  const confirmarPagoHandler = async (id) => {
     try {
-      const updated = await ComprasService.confirmarPago(id);
-      setCompras((prev) => prev.map((c) => (c._id === id ? updated.compra : c)));
-      setMensaje({ tipo: "success", texto: "Pago confirmado y stock actualizado" });
+      const res = await confirmarPago(id);
+      if (res.ok) {
+        setCompras((prev) =>
+          prev.map((c) => (c._id === id ? res.data.compra : c))
+        );
+        setMensaje({ tipo: "success", texto: "Pago confirmado y stock actualizado" });
+      } else {
+        setMensaje({ tipo: "danger", texto: "Error al confirmar pago" });
+      }
     } catch (error) {
       setMensaje({ tipo: "danger", texto: "Error al confirmar pago" });
     }
   };
 
- 
   const guardarEnvio = async (compra) => {
     try {
-      const updated = await ComprasService.actualizarEnvio(compra._id, {
+      const res = await actualizarEnvio(compra._id, {
         estadoEnvio: compra.estadoEnvio,
         trackingNumber: compra.trackingNumber || "",
         courier: compra.courier || "",
       });
-      setCompras((prev) => prev.map((c) => (c._id === compra._id ? updated.compra : c)));
-      setMensaje({ tipo: "success", texto: "Estado de envío actualizado" });
+      if (res.ok) {
+        setCompras((prev) =>
+          prev.map((c) => (c._id === compra._id ? res.data.compra : c))
+        );
+        setMensaje({ tipo: "success", texto: "Estado de envío actualizado" });
+      } else {
+        setMensaje({ tipo: "danger", texto: "Error al actualizar estado de envío" });
+      }
     } catch (error) {
       setMensaje({ tipo: "danger", texto: "Error al actualizar estado de envío" });
     }
@@ -125,8 +140,7 @@ const AdminCompras = () => {
       </div>
     );
   }
-
-  return (
+ return (
     <div className="mt-3">
       <h3>Compras de clientes</h3>
 
@@ -136,7 +150,7 @@ const AdminCompras = () => {
         </Alert>
       )}
 
-
+      {/* Filtros */}
       <Row className="mb-3 g-2">
         <Col xs={12} md={3}>
           <Form.Select
@@ -172,7 +186,7 @@ const AdminCompras = () => {
         </Col>
       </Row>
 
-  
+      {/* Tabla de compras */}
       <div className="table-responsive">
         <Table striped bordered hover>
           <thead>
@@ -217,21 +231,20 @@ const AdminCompras = () => {
                           ? "bg-secondary"
                           : "bg-warning text-dark"
                       }`}
-                    >
+ >
                       {compra.estado}
                     </span>
                     <Button
                       variant="outline-success"
                       size="sm"
-                      onClick={() => confirmarPago(compra._id)}
+                      onClick={() => confirmarPagoHandler(compra._id)}
                       disabled={compra.estado !== "pendiente"}
                     >
-                       Confirmar pago
+                      Confirmar pago
                     </Button>
                   </div>
                 </td>
 
-     
                 <td style={{ minWidth: 160 }}>
                   <Form.Select
                     value={compra.estadoEnvio || "pendiente"}
@@ -263,7 +276,6 @@ const AdminCompras = () => {
                   />
                 </td>
 
-         
                 <td style={{ minWidth: 160 }}>
                   <Form.Control
                     placeholder="Courier"
@@ -278,7 +290,6 @@ const AdminCompras = () => {
                   />
                 </td>
 
-          
                 <td>
                   <div className="small">
                     <div>Creada: {new Date(compra.createdAt).toLocaleDateString()}</div>
@@ -291,7 +302,6 @@ const AdminCompras = () => {
                   </div>
                 </td>
 
-        
                 <td>
                   <div className="d-flex flex-column gap-2">
                     <Button
@@ -316,11 +326,9 @@ const AdminCompras = () => {
         </Table>
       </div>
 
-
       {renderPagination()}
     </div>
   );
 };
 
 export default AdminCompras;
-
