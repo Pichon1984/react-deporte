@@ -1,5 +1,23 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Form, Button, Pagination, ListGroup, Tabs, Tab } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Table,
+  Form,
+  Button,
+  Pagination,
+  ListGroup,
+  Tabs,
+  Tab,
+} from "react-bootstrap";
+
+
+import {
+  getUsuarios,
+  updateUsuarioEstado,
+  deleteUsuario,
+} from "../../services/api"; 
 
 const AdminUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -7,25 +25,19 @@ const AdminUsuarios = () => {
   const [sugerencias, setSugerencias] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [tab, setTab] = useState("activos"); 
+  const [tab, setTab] = useState("activos");
+
 
   const fetchUsuarios = async (searchTerm = "", pageNumber = 1) => {
     try {
-      const token = localStorage.getItem("token");
-      const url = searchTerm
-        ? `http://localhost:3000/api/usuarios?search=${encodeURIComponent(searchTerm)}&page=${pageNumber}&limit=10`
-        : `http://localhost:3000/api/usuarios?page=${pageNumber}&limit=10`;
-
-      const res = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": token
-        }
-      });
-
-      const data = await res.json();
-      setUsuarios(data.usuarios || []);
-      setTotalPages(data.totalPages || 1);
+      const res = await getUsuarios(pageNumber, 10, searchTerm);
+      if (res.ok) {
+        setUsuarios(res.data.usuarios || []);
+        setTotalPages(res.data.totalPages || 1);
+      } else {
+        console.error("Error cargando usuarios:", res.data);
+        setUsuarios([]);
+      }
     } catch (error) {
       console.error("Error cargando usuarios:", error);
       setUsuarios([]);
@@ -36,25 +48,22 @@ const AdminUsuarios = () => {
     fetchUsuarios(search, page);
   }, [page]);
 
+  
   const handleChange = async (e) => {
     const value = e.target.value;
     setSearch(value);
 
     if (value.length > 1) {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(
-          `http://localhost:3000/api/usuarios?search=${encodeURIComponent(value)}&limit=5`,
-          { headers: { "x-token": token } }
-        );
-        const data = await res.json();
-        setSugerencias(data.usuarios || []);
+        const res = await getUsuarios(1, 5, value);
+        if (res.ok) {
+          setSugerencias(res.data.usuarios || []);
+        }
       } catch (error) {
         console.error("Error buscando sugerencias:", error);
         setSugerencias([]);
       }
     } else {
-     
       setSugerencias([]);
       fetchUsuarios("", 1);
     }
@@ -63,43 +72,35 @@ const AdminUsuarios = () => {
   const handleSelectSugerencia = (cliente) => {
     setSearch(cliente.correo);
     setSugerencias([]);
-    setUsuarios([cliente]); 
+    setUsuarios([cliente]);
   };
 
+  
   const handleBloquear = async (id, estado) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3000/api/usuarios/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-token": token
-        },
-        body: JSON.stringify({ estado: !estado }),
-      });
-      const data = await res.json();
-      setUsuarios((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, ...data.usuario } : u))
-      );
+      const res = await updateUsuarioEstado(id, !estado);
+      if (res.ok) {
+        setUsuarios((prev) =>
+          prev.map((u) => (u._id === id ? { ...u, ...res.data.usuario } : u))
+        );
+      }
     } catch (error) {
       console.error("Error bloqueando usuario:", error);
     }
   };
 
+
   const handleEliminar = async (id) => {
     if (!window.confirm("¿Eliminar este usuario?")) return;
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`http://localhost:3000/api/usuarios/${id}`, {
-        method: "DELETE",
-        headers: { "x-token": token }
-      });
-      setUsuarios((prev) => prev.filter((u) => u._id !== id));
+      const res = await deleteUsuario(id);
+      if (res.ok) {
+        setUsuarios((prev) => prev.filter((u) => u._id !== id));
+      }
     } catch (error) {
       console.error("Error eliminando usuario:", error);
     }
   };
-
 
   const usuariosFiltrados = usuarios.filter((u) =>
     tab === "activos" ? u.estado === true : u.estado === false
@@ -134,13 +135,13 @@ const AdminUsuarios = () => {
             )}
           </Form>
 
-      
+    
           <Tabs activeKey={tab} onSelect={(k) => setTab(k)} className="mb-3">
             <Tab eventKey="activos" title="Activos" />
             <Tab eventKey="bloqueados" title="Bloqueados" />
           </Tabs>
 
-      
+     
           <div className="table-responsive">
             <Table striped bordered>
               <thead>
@@ -184,14 +185,15 @@ const AdminUsuarios = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No hay usuarios para mostrar</td>
+                    <td colSpan="6" className="text-center">
+                      No hay usuarios para mostrar
+                    </td>
                   </tr>
                 )}
               </tbody>
             </Table>
           </div>
 
-       
           <Pagination className="justify-content-center mt-3">
             {[...Array(totalPages)].map((_, i) => (
               <Pagination.Item

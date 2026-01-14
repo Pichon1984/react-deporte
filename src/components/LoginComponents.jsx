@@ -76,8 +76,7 @@ if (from && from !== "/inicio") {
       setError(error.message || "Error en el servidor o CORS bloqueado");
     }
   };
-console.log("FROM STATE:", location.state);
-console.log("FROM PATH:", from);
+
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">
