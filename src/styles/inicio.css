@@ -1,12 +1,31 @@
-
+/* Contenedor que rompe el layout central */
 .carousel-wrapper {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
   width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  z-index: 1;
 }
+
+/* Imagen del carrusel */
 .carousel-item img {
+  width: 100vw;
+  max-width: 100vw;
+  height: auto;
   max-height: 600px;
   object-fit: cover;
+  display: block;
 }
+
+
+
+
+/* Cards */
 .card a {
   text-decoration: none;
   color: inherit;
@@ -16,8 +35,6 @@
   transform: scale(1.02);
   transition: transform 0.3s ease;
 }
-
-
 
 @media (max-width: 768px) {
   .carousel-item img {
@@ -33,3 +50,8 @@
   }
 }
 
+
+/* Seguridad extra para evitar scroll horizontal en toda la página */
+html, body {
+  overflow-x: hidden;
+}

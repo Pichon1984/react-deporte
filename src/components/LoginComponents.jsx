@@ -11,7 +11,6 @@ const LoginComponent = () => {
   const location = useLocation();
   const { logIn } = useAuth();
 
-
   const from = location.state?.from?.pathname || "/inicio";
 
   const handleSubmit = async (e) => {
@@ -19,7 +18,7 @@ const LoginComponent = () => {
     setError(null);
 
     try {
-   
+      
       const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,55 +27,35 @@ const LoginComponent = () => {
       });
 
       const data = await resp.json();
+      
 
       if (!resp.ok) {
         return setError(data.msg || "Error en login");
       }
 
-     
-      if (import.meta.env.MODE !== "production" && data.token) {
-        localStorage.setItem("token", data.token);
-      }
-      const checkResp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, {
-        credentials: "include",
-        headers:
-          import.meta.env.MODE !== "production"
-            ? { "Content-Type": "application/json", "x-token": localStorage.getItem("token") || "" }
-            : {},
-      });
-
-      const checkData = await checkResp.json();
-
-      if (!checkResp.ok || !checkData.usuario) {
-        return setError("No se pudo validar la sesión");
-      }
-
-      const usuario = checkData.usuario;
+      const usuario = data.usuario;
       const token = data.token || null;
+      const refreshToken = data.refreshToken || null;
 
       
-      logIn(usuario, token);
+      logIn(usuario, token, refreshToken);
 
-     
-if (from && from !== "/inicio") {
-  navigate(from, { replace: true });
-} else {
-
-  if (usuario.rol === "ADMIN") {
-    navigate("/admin", { replace: true });
-  } else if (usuario.rol === "CLIENTE") {
-    navigate("/cliente", { replace: true });
-  } else {
-    navigate("/inicio", { replace: true });
-  }
-}
-
+      if (from && from !== "/inicio") {
+        navigate(from, { replace: true });
+      } else {
+        if (usuario?.rol === "ADMIN") {
+          navigate("/admin", { replace: true });
+        } else if (usuario?.rol === "CLIENTE") {
+          navigate("/cliente", { replace: true });
+        } else {
+          navigate("/inicio", { replace: true });
+        }
+      }
     } catch (error) {
-      console.error(error);
+      console.error("❌ Error en login:", error);
       setError(error.message || "Error en el servidor o CORS bloqueado");
     }
   };
-
 
   return (
     <div className="container-fluid py-5" id="contenedoriniciosesion">

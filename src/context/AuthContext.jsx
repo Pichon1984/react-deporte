@@ -13,82 +13,83 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
+      const storedRefresh = localStorage.getItem("refreshToken");
+
       const resp = await fetch(`${API_URL}/api/auth/refresh`, {
         method: "POST",
-        credentials: "include",
+        credentials: "include", 
         headers: { "Content-Type": "application/json" },
         body:
           import.meta.env.MODE !== "production"
-            ? JSON.stringify({ refreshToken: localStorage.getItem("refreshToken") })
+            ? JSON.stringify({ refreshToken: storedRefresh })
             : undefined,
       });
 
-      if (resp.ok) {
-        const data = await resp.json();
-        const newToken = data.token || data.accessToken;
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.msg || "Error al refrescar token");
 
-        if (import.meta.env.MODE !== "production" && newToken) {
-          localStorage.setItem("token", newToken);
-          setToken(newToken);
-        }
-        return true;
+      const newToken = data.token;
+      const usuarioData = data.usuario;
+
+     
+      if (import.meta.env.MODE !== "production" && newToken) {
+        localStorage.setItem("token", newToken);
+        setToken(newToken);
       }
+
+     
+      if (usuarioData) {
+        setUsuario(usuarioData);
+      }
+
+      return true;
     } catch (err) {
       console.error("❌ Error en refresh:", err);
+      return false;
     }
-    return false;
+  };
+
+
+  const checkSession = async () => {
+    try {
+      let resp;
+      if (import.meta.env.MODE === "production") {
+        resp = await fetch(`${API_URL}/api/auth/check`, { credentials: "include" });
+      } else {
+        const storedToken = localStorage.getItem("token");
+        if (!storedToken) return null;
+        setToken(storedToken);
+
+        resp = await fetch(`${API_URL}/api/auth/check`, {
+          headers: { "Content-Type": "application/json", "x-token": storedToken },
+        });
+      }
+
+      const data = await resp.json();
+      if (!resp.ok || !data?.usuario) return null;
+
+      return data.usuario;
+    } catch (err) {
+      console.error("❌ Error en check:", err);
+      return null;
+    }
   };
 
   useEffect(() => {
     const cargarUsuario = async () => {
       try {
-        let resp;
-
-        if (import.meta.env.MODE === "production") {
-          resp = await fetch(`${API_URL}/api/auth/check`, {
-            credentials: "include",
-          });
+        const u = await checkSession();
+        if (u) {
+          setUsuario(u);
         } else {
-          const storedToken = localStorage.getItem("token");
-          if (!storedToken) {
-            setCargando(false);
-            return;
-          }
-          setToken(storedToken);
-
-          resp = await fetch(`${API_URL}/api/auth/check`, {
-            headers: {
-              "Content-Type": "application/json",
-              "x-token": storedToken,
-            },
-          });
-        }
-
-        if (resp.ok) {
-          const data = await resp.json();
-          const u = data.usuario || data;
-          const usuarioData = {
-            id: u._id || u.id,
-            nombre: u.nombre,
-            apellido: u.apellido,
-            correo: u.correo,
-            rol: (u.rol || "").toUpperCase(),
-            telefono: u.telefono,
-            direccion: u.direccion,
-            provincia: u.provincia,
-            localidad: u.localidad,
-            codigoPostal: u.codigoPostal,
-            dni: u.dni,
-          };
-          setUsuario(usuarioData);
-        } else if (resp.status === 401) {
           const refreshed = await refreshToken();
           if (refreshed) {
-            return cargarUsuario();
+            const u2 = await checkSession();
+            if (u2) {
+              setUsuario(u2);
+              return;
+            }
           }
-          setUsuario(null);
-          setToken(null);
-        } else {
           setUsuario(null);
           setToken(null);
         }
@@ -104,7 +105,9 @@ export const AuthProvider = ({ children }) => {
     cargarUsuario();
   }, []);
 
-  const logIn = (usuarioData, tokenData, refreshData) => {
+ 
+  const logIn = async (usuarioData, tokenData, refreshData) => {
+
     if (import.meta.env.MODE !== "production") {
       if (tokenData) {
         localStorage.setItem("token", tokenData);
@@ -115,8 +118,36 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setUsuario(usuarioData);
+    return usuarioData;
   };
 
+  
+  const register = async (formData) => {
+    const resp = await fetch(`${API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", 
+      body: JSON.stringify(formData),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.msg || "Error en registro");
+
+    if (import.meta.env.MODE !== "production") {
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+    }
+
+    setUsuario(data.usuario || null);
+    return data.usuario;
+  };
+
+ 
   const logOut = async () => {
     try {
       if (import.meta.env.MODE === "production") {
@@ -138,7 +169,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, token, cargando, logIn, logOut }}>
+    <AuthContext.Provider value={{ usuario, token, cargando, logIn, register, logOut }}>
       {children}
     </AuthContext.Provider>
   );
