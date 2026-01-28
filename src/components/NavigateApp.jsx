@@ -110,7 +110,7 @@ export const NavigateApp = () => {
             <SearchInput />
           </Nav>
 
-          <div className="d-flex align-items-center gap-3">
+         <div className="d-flex align-items-center gap-3 mt-3 mt-lg-0">
             <OverlayTrigger trigger={["hover", "focus"]} placement="bottom" overlay={popover}>
               <Nav.Link as={NavLink} to="/carrito" className="position-relative">
                 <BsCart size={22} />

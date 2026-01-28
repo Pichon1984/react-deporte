@@ -22,9 +22,7 @@ const Registro = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
- 
   const validarCorreo = (correo) => /^\S+@\S+\.\S+$/.test(correo);
-
 
   const reglasPassword = [
     { test: (p) => p.length >= 8, msg: "Mínimo 8 caracteres" },
@@ -42,6 +40,7 @@ const Registro = () => {
     setError(null);
     setSuccess(null);
 
+   
     if (!validarCorreo(form.correo)) {
       return setError("Formato de correo inválido");
     }
@@ -52,33 +51,49 @@ const Registro = () => {
     }
 
     try {
-      const resp = await fetch("http://localhost:3000/api/auth/register", {
+  
+
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include", 
       });
 
       const data = await resp.json();
+      
 
       if (!resp.ok) {
         return setError(data.msg || "Error en registro");
       }
 
+      
+      if (import.meta.env.MODE !== "production") {
+        if (data.token) localStorage.setItem("token", data.token);
+        if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+      }
+
+   
       const usuario = data.usuario;
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
-      logIn(usuario, data.token);
+      const token = data.token || null;
+      const refreshToken = data.refreshToken || null;
+
+      logIn(usuario, token, refreshToken);
 
       setSuccess("Registro exitoso ✅");
 
+     
       setTimeout(() => {
-        if ((usuario.rol || "").toUpperCase() === "ADMIN") {
+        if ((usuario?.rol || "").toUpperCase() === "ADMIN") {
           navigate("/admin");
-        } else {
+        } else if ((usuario?.rol || "").toUpperCase() === "CLIENTE") {
           navigate("/cliente");
+        } else {
+          navigate("/inicio");
         }
-      }, 2000);
-    } catch {
+      }, 1500);
+    } catch (err) {
+      console.error("❌ Error en registro:", err);
       setError("Error en el servidor");
     }
   };
@@ -88,7 +103,6 @@ const Registro = () => {
       <div className="card shadow-lg p-4" style={{ maxWidth: "600px", width: "100%" }}>
         <h2 className="text-center mb-4">Registro</h2>
         <form onSubmit={handleSubmit} className="row g-3">
-       
           <div className="col-md-6">
             <label htmlFor="nombre" className="form-label">Nombre</label>
             <input type="text" className="form-control" id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
@@ -112,7 +126,6 @@ const Registro = () => {
               ))}
             </ul>
           </div>
-
           <div className="col-md-6">
             <label htmlFor="telefono" className="form-label">Teléfono</label>
             <input type="text" className="form-control" id="telefono" name="telefono" value={form.telefono} onChange={handleChange} />
