@@ -13,10 +13,13 @@ export const CarritoProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+    try {
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+    } catch (err) {
+      console.error("Error guardando carrito en localStorage:", err);
+    }
   }, [carrito]);
 
-  
   const agregarProducto = (producto, talle, cantidad = 1, envio = "") => {
     if (!producto?._id) return;
 
@@ -33,14 +36,10 @@ export const CarritoProvider = ({ children }) => {
         nuevo[idx].cantidad += cantidad;
         return nuevo;
       } else {
-        return [
-          ...prev,
-          { productoId: producto, talle, cantidad, envio } 
-        ];
+        return [...prev, { productoId: producto, talle, cantidad, envio }];
       }
     });
   };
-
 
   const sumarUnidad = (productoId, talle, envio = "") => {
     setCarrito(prev =>
@@ -53,7 +52,6 @@ export const CarritoProvider = ({ children }) => {
       )
     );
   };
-
 
   const eliminarProducto = (productoId, talle, envio = "") => {
     setCarrito(prev =>
@@ -69,7 +67,6 @@ export const CarritoProvider = ({ children }) => {
     );
   };
 
-
   const eliminarProductoTotal = (productoId, talle, envio = "") => {
     setCarrito(prev =>
       prev.filter(
@@ -83,8 +80,14 @@ export const CarritoProvider = ({ children }) => {
     );
   };
 
-
-  const vaciarCarrito = () => setCarrito([]);
+  const vaciarCarrito = () => {
+    setCarrito([]);
+    try {
+      localStorage.removeItem("carrito"); // 👈 limpia también el storage
+    } catch (err) {
+      console.error("Error limpiando carrito en localStorage:", err);
+    }
+  };
 
   return (
     <CarritoContext.Provider
@@ -101,12 +104,6 @@ export const CarritoProvider = ({ children }) => {
     </CarritoContext.Provider>
   );
 };
-
-
-
-
-
-
 
 
 

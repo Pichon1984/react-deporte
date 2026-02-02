@@ -132,7 +132,7 @@ const Registro = () => {
           </div>
           <div className="col-md-6">
             <label htmlFor="dni" className="form-label">DNI</label>
-            <input type="text" className="form-control" id="dni" name="dni" value={form.dni} onChange={handleChange} />
+            <input type="text" className="form-control" id="dni" name="dni" value={form.dni} onChange={handleChange} required/>
           </div>
           <div className="col-12">
             <label htmlFor="direccion" className="form-label">Dirección</label>
