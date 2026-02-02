@@ -3,7 +3,7 @@ import { Container, Row, Col, Image, Button } from "react-bootstrap";
 import { CarritoContext } from "../context/CarritoContext";
 import { BsTrash } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL.replace(/\/$/, "");
 
@@ -16,10 +16,9 @@ const CarritoPage = () => {
     eliminarProductoTotal
   } = useContext(CarritoContext);
 
-  const { usuario, token, cargando } = useAuth(); 
+  const { usuario, token, cargando } = useAuth();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
 
   const calcularTotal = () =>
     carrito.reduce(
@@ -28,7 +27,6 @@ const CarritoPage = () => {
       0
     );
 
- 
   function calcularEnvio(subtotal) {
     const ENVIO_BASE = 30000;
     const LIMITE_ENVIO_GRATIS = 200000;
@@ -37,13 +35,11 @@ const CarritoPage = () => {
     return Math.max(ENVIO_BASE - descuento, 0);
   }
 
-  
   async function confirmarCarrito() {
     try {
       setLoading(true);
 
       if (!usuario) {
-     
         localStorage.setItem("redirectAfterLogin", "/carrito");
         navigate("/cuenta");
         return;
@@ -68,7 +64,6 @@ const CarritoPage = () => {
 
       const envio = { metodo: "domicilio", nombre: usuario.nombre, email: usuario.correo };
 
-   
       const ordenRes = await fetch(`${API_URL}/api/ordenes/checkout`, {
         method: "POST",
         headers,
@@ -78,7 +73,6 @@ const CarritoPage = () => {
       const ordenData = await ordenRes.json();
       if (!ordenRes.ok || !ordenData.ordenId) return;
 
-   
       const compraRes = await fetch(`${API_URL}/api/compras`, {
         method: "POST",
         headers,
@@ -94,6 +88,7 @@ const CarritoPage = () => {
       const compraData = await compraRes.json();
 
       if (compraRes.ok && compraData.compra?._id) {
+        vaciarCarrito();   // 👈 limpia carrito en memoria y localStorage
         navigate(`/checkout/${compraData.compra._id}`);
       }
     } catch (err) {
